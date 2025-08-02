@@ -27,12 +27,3 @@ readme_content = """
 - 無需伺服器，資料儲存於使用者瀏覽器 `localStorage`
 
 ---
-
-## 🛠️ 如何部署（選擇性）
-
-若你想自己 fork 或修改：
-
-```bash
-git clone https://github.com/AndyKauo/table-tennis-record.git
-cd table-tennis-record
-# 開啟 index.html 即可
