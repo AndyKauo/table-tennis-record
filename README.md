@@ -27,3 +27,61 @@ readme_content = """
 - 無需伺服器，資料儲存於使用者瀏覽器 `localStorage`
 
 ---
+add sheety
+Retrieve rows from your sheet
+https://api.sheety.co/34f676126a9603f83a4a060ee3b5df9c/tableTennisRecords/t1
+let url = 'https://api.sheety.co/34f676126a9603f83a4a060ee3b5df9c/tableTennisRecords/t1';
+fetch(url)
+.then((response) => response.json())
+.then(json => {
+  // Do something with the data
+  console.log(json.t1S);
+});
+
+
+Add a row to your sheet
+https://api.sheety.co/34f676126a9603f83a4a060ee3b5df9c/tableTennisRecords/t1
+let url = 'https://api.sheety.co/34f676126a9603f83a4a060ee3b5df9c/tableTennisRecords/t1';
+  let body = {
+    t1: {
+      ...
+    }
+  }
+  fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(body)
+  })
+  .then((response) => response.json())
+  .then(json => {
+    // Do something with object
+    console.log(json.t1);
+  });
+Edit a row in your sheet
+https://api.sheety.co/34f676126a9603f83a4a060ee3b5df9c/tableTennisRecords/t1/[Object ID]
+let url = 'https://api.sheety.co/34f676126a9603f83a4a060ee3b5df9c/tableTennisRecords/t1/2';
+let body = {
+  t1: {
+    ...
+  }
+}
+fetch(url, {
+  method: 'PUT',
+  body: JSON.stringify(body)
+})
+.then((response) => response.json())
+.then(json => {
+  // Do something with object
+  console.log(json.t1);
+});
+
+Delete a row in your sheet
+https://api.sheety.co/34f676126a9603f83a4a060ee3b5df9c/tableTennisRecords/t1/[Object ID]
+let url = 'https://api.sheety.co/34f676126a9603f83a4a060ee3b5df9c/tableTennisRecords/t1/2';
+fetch(url, {
+  method: 'DELETE',
+})
+.then((response) => response.json())
+.then(() => {
+  console.log('Object deleted');
+});
+
