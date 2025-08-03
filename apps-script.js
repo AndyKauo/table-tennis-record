@@ -2,7 +2,7 @@
 // 請將此程式碼貼到 script.google.com 的專案中
 
 // 設定你的Google Sheets ID (請替換為你的實際ID)
-const SHEET_ID = '1y4o8XYv8KfcyKn11fDNxZSHp2rLILDXjiQLstvkvYDQ/';
+const SHEET_ID = '1y4o8XYv8KfcyKn11fDNxZSHp2rLILDXjiQLstvkvYDQ';
 const SHEET_NAME = 't1';
 
 function doGet(e) {
