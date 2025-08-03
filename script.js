@@ -759,13 +759,14 @@ class TableTennisRecordSystem {
                     console.error('1. Sheety權限設定錯誤');
                     console.error('2. Google Sheets連接問題');
                     console.error('3. 工作表名稱不匹配');
-                    this.showErrorMessage('警告：資料可能未同步到Google Sheets\n請檢查Sheety權限設定');
+                    this.showErrorMessage('警告：資料可能未同步到Google Sheets\n請檢查權限設定');
                 } else {
                     console.log('✅ 資料同步成功！');
+                    this.showSuccessMessage('✅ 資料已成功同步到後台資料庫！');
                 }
             }, 5000);
             
-            this.showSuccessMessage('API回應成功！正在檢查Google Sheets同步...');
+            this.showSuccessMessage('正在同步後台資料庫...');
             
         } catch (err) {
             this.hideLoadingMessage();
@@ -990,7 +991,7 @@ class TableTennisRecordSystem {
         setTimeout(() => {
             toast.style.animation = 'fadeOut 0.3s ease';
             setTimeout(() => toast.remove(), 300);
-        }, 5000);
+        }, 3000);
     }
 
     showErrorMessage(msg) {
@@ -1014,7 +1015,7 @@ class TableTennisRecordSystem {
         setTimeout(() => {
             toast.style.animation = 'fadeOut 0.3s ease';
             setTimeout(() => toast.remove(), 300);
-        }, 5000);
+        }, 3000);
     }
 
     validateMatchData(data) {
