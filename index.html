@@ -211,7 +211,67 @@
         <!-- 歷史記錄頁面 -->
         <div id="history-tab" class="tab-content">
             <h2>比賽歷史記錄</h2>
+            
+            <!-- 篩選控制區域 -->
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="filter-player">篩選球員：</label>
+                        <select id="filter-player">
+                            <option value="">全部球員</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filter-match-type">比賽類型：</label>
+                        <select id="filter-match-type">
+                            <option value="">全部類型</option>
+                            <option value="team">團體賽</option>
+                            <option value="singles">個人單打</option>
+                            <option value="doubles">個人雙打</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filter-result">比賽結果：</label>
+                        <select id="filter-result">
+                            <option value="">全部結果</option>
+                            <option value="win">勝</option>
+                            <option value="lose">負</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="filter-opponent">對手學校：</label>
+                        <select id="filter-opponent">
+                            <option value="">全部學校</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filter-date-start">開始日期：</label>
+                        <input type="date" id="filter-date-start">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filter-date-end">結束日期：</label>
+                        <input type="date" id="filter-date-end">
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="button" class="filter-btn apply-btn" onclick="applyFilters()">套用篩選</button>
+                    <button type="button" class="filter-btn clear-btn" onclick="clearFilters()">清除篩選</button>
+                </div>
+            </div>
+            
+            <!-- 比賽記錄顯示區域 -->
             <div class="match-history">
+                <div class="results-summary">
+                    <span id="results-count">顯示全部記錄</span>
+                </div>
                 <div id="history-list"></div>
             </div>
         </div>
