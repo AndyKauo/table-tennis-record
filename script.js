@@ -750,16 +750,16 @@ class TableTennisRecordSystem {
             
             // 延遲檢查：給Sheety時間同步
             setTimeout(async () => {
-                console.log('🔄 5秒後檢查Google Sheets同步狀況...');
+                console.log('🔄 5秒後檢查後台資料庫同步狀況...');
                 await this.fetchMatchesFromSheet();
                 
                 if (this.matches.length === 0) {
-                    console.error('⚠️ 警告：Google Sheets中仍無資料！');
+                    console.error('⚠️ 警告：後台資料庫中仍無資料！');
                     console.error('可能的問題：');
-                    console.error('1. Sheety權限設定錯誤');
-                    console.error('2. Google Sheets連接問題');
-                    console.error('3. 工作表名稱不匹配');
-                    this.showErrorMessage('警告：資料可能未同步到Google Sheets\n請檢查權限設定');
+                    console.error('1. 資料庫權限設定錯誤');
+                    console.error('2. 後台資料庫連接問題');
+                    console.error('3. 資料表名稱不匹配');
+                    this.showErrorMessage('警告：資料可能未同步到後台資料庫\n請檢查權限設定');
                 } else {
                     console.log('✅ 資料同步成功！');
                     this.showSuccessMessage('✅ 資料已成功同步到後台資料庫！');
