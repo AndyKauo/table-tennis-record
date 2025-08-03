@@ -277,6 +277,43 @@ nav {
     margin-top: 0.5rem;
 }
 
+/* 刪除按鈕樣式 */
+.delete-btn {
+    display: inline-block;
+    background: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 0.8rem;
+    transition: background 0.2s ease;
+}
+
+.delete-btn:hover {
+    background: #c82333;
+}
+
+/* 同步狀態樣式 */
+.sync-status {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    margin-top: 0.3rem;
+    display: inline-block;
+}
+
+.sync-status.pending {
+    background: #ffc107;
+    color: #000;
+}
+
+.sync-status.offline {
+    background: #6c757d;
+    color: #fff;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .container {
