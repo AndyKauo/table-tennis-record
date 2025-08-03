@@ -827,9 +827,14 @@ class TableTennisRecordSystem {
         this.showLoadingMessage('正在刪除記錄...');
         
         try {
-            const url = `${this.apiUrl}?id=${id}`;
-            const response = await fetch(url, { 
-                method: 'DELETE'
+            // 使用POST模擬DELETE，避免CORS問題
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('id', id);
+            
+            const response = await fetch(this.apiUrl, { 
+                method: 'POST',
+                body: formData
             });
             
             if (!response.ok) {
@@ -985,7 +990,7 @@ class TableTennisRecordSystem {
         setTimeout(() => {
             toast.style.animation = 'fadeOut 0.3s ease';
             setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        }, 5000);
     }
 
     showErrorMessage(msg) {

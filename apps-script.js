@@ -54,6 +54,11 @@ function doPost(e) {
   try {
     const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
     
+    // 檢查是否為刪除請求
+    if (e.parameter && e.parameter.action === 'delete') {
+      return handleDelete(e.parameter.id, sheet);
+    }
+    
     // 處理FormData或JSON
     let requestData;
     if (e.parameter && e.parameter.data) {
@@ -109,13 +114,10 @@ function doPost(e) {
   }
 }
 
-// DELETE 支援 - 刪除指定ID的記錄
-function doDelete(e) {
+// 處理刪除請求
+function handleDelete(idParam, sheet) {
   try {
-    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
-    
-    // 從URL參數獲取ID
-    const id = parseInt(e.parameter.id);
+    const id = parseInt(idParam);
     
     if (!id || id < 1) {
       throw new Error('無效的ID');
@@ -141,7 +143,7 @@ function doDelete(e) {
   } catch (error) {
     const result = { 
       error: error.toString(),
-      message: '刪除失敗' 
+      message: '刪除失敗: ' + error.message
     };
     return ContentService
       .createTextOutput(JSON.stringify(result))
