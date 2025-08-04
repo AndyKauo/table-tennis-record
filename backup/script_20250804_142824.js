@@ -9,6 +9,36 @@ class TableTennisRecordSystem {
             'date', 'opponentSchool', 'matchType', 'ourPlayers', 
             'opponentPlayers', 'scores', 'result', 'notes', 'timestamp'
         ];
+        
+        // 球員資料對應表 (根據grade.png建立)
+        this.playerData = {
+            '陳敬允': '10201',
+            '黃梓恩': '10201', // 需要確認實際座號
+            '許晉承': '20205',
+            '李知昱': '20205', // 需要確認實際座號
+            '徐寓凱': '30503',
+            '游翔凱': '30603',
+            '蔡孟廷': '30703',
+            '莊皓嵐': '30809',
+            '陳禹澤': '30812',
+            '王語瑄': '30823',
+            '張愷均': '30905',
+            '張振齊': '40311',
+            '周禹顥': '40309',
+            '郭仁傑': '40310',
+            '黃柏睿': '40404',
+            '陳泓睿': '40511',
+            '李予閎': '40512',
+            '鄭立楷': '40710',
+            '張芮庭': '50134',
+            '陳沛筠': '50224',
+            '葉立勤': '50306',
+            '郭宸睿': '50612',
+            '李定謙': '50701',
+            '王嘉旻': '50713',
+            '陳妍齊': '50829',
+            '林培鈞': '50904'
+        };
         // 本地記憶的比賽與球員資料
         this.matches = [];
         this.players = [];
@@ -18,6 +48,18 @@ class TableTennisRecordSystem {
         this.pendingMatches = JSON.parse(localStorage.getItem('pendingMatches') || '[]');
         this.isOnline = navigator.onLine;
         this.syncInProgress = false;
+        
+        // 篩選功能相關
+        this.filteredMatches = [];
+        this.activeFilters = {
+            player: '',
+            matchType: '',
+            result: '',
+            opponent: '',
+            dateStart: '',
+            dateEnd: ''
+        };
+        
         this.init();
     }
 
@@ -45,6 +87,71 @@ class TableTennisRecordSystem {
         this.showTab('record', document.querySelector('.nav-btn.active'));
     }
 
+    /**
+     * 根據座號判斷年級 (座號第一位數字 + 1)
+     */
+    getGradeFromStudentId(studentId) {
+        if (!studentId || studentId.length < 5) return null;
+        const gradeDigit = parseInt(studentId.charAt(0));
+        return gradeDigit + 1; // 暑假後升級，所以 +1
+    }
+
+    /**
+     * 根據球員姓名獲取年級
+     */
+    getPlayerGrade(playerName) {
+        const studentId = this.playerData[playerName];
+        return studentId ? this.getGradeFromStudentId(studentId) : null;
+    }
+
+    /**
+     * 根據年級獲取該年級的所有球員
+     */
+    getPlayersByGrade(grade) {
+        const players = [];
+        for (const [name, studentId] of Object.entries(this.playerData)) {
+            if (this.getGradeFromStudentId(studentId) === parseInt(grade)) {
+                players.push(name);
+            }
+        }
+        return players.sort(); // 按名字排序
+    }
+
+    /**
+     * 更新球員選單內容
+     */
+    updatePlayerSelect(gradeSelectId, playerSelectId, selectedGrade) {
+        const playerSelect = document.getElementById(playerSelectId);
+        if (!playerSelect) return;
+
+        // 清空現有選項
+        playerSelect.innerHTML = '<option value="">請選擇球員</option>';
+        
+        if (selectedGrade) {
+            // 啟用球員選單
+            playerSelect.disabled = false;
+            
+            // 添加該年級的球員
+            const players = this.getPlayersByGrade(selectedGrade);
+            players.forEach(player => {
+                const option = document.createElement('option');
+                option.value = player;
+                option.textContent = player;
+                playerSelect.appendChild(option);
+            });
+            
+            // 添加"其他"選項
+            const otherOption = document.createElement('option');
+            otherOption.value = 'other';
+            otherOption.textContent = '其他（手動輸入）';
+            playerSelect.appendChild(otherOption);
+        } else {
+            // 停用球員選單
+            playerSelect.disabled = true;
+            playerSelect.innerHTML = '<option value="">請先選擇年級</option>';
+        }
+    }
+
     setupEventListeners() {
         // 表單提交
         const form = document.getElementById('match-form');
@@ -58,6 +165,15 @@ class TableTennisRecordSystem {
         document.querySelectorAll('.our-score, .opp-score').forEach(input => {
             input.addEventListener('input', () => this.calculateResult());
         });
+        
+        // 第一位球員年級選擇
+        const gradeSelect1 = document.getElementById('our-player-grade');
+        if (gradeSelect1) {
+            gradeSelect1.addEventListener('change', (e) => {
+                this.updatePlayerSelect('our-player-grade', 'our-player', e.target.value);
+            });
+        }
+        
         // 第一位球員選擇
         const playerSelect = document.getElementById('our-player');
         if (playerSelect) {
@@ -65,7 +181,16 @@ class TableTennisRecordSystem {
                 this.toggleCustomPlayerInput('our-player', 'our-player-custom', e.target.value);
             });
         }
-        // 第二位球員選擇（可能不存在）
+        
+        // 第二位球員年級選擇
+        const gradeSelect2 = document.getElementById('our-player-2-grade');
+        if (gradeSelect2) {
+            gradeSelect2.addEventListener('change', (e) => {
+                this.updatePlayerSelect('our-player-2-grade', 'our-player-2', e.target.value);
+            });
+        }
+        
+        // 第二位球員選擇
         const secondSelect = document.getElementById('our-player-2');
         if (secondSelect) {
             secondSelect.addEventListener('change', (e) => {
@@ -109,12 +234,20 @@ class TableTennisRecordSystem {
         } else {
             if (ourGroup) {
                 ourGroup.style.display = 'none';
+                // 重置第二位球員的年級和球員選單
+                const grade2 = document.getElementById('our-player-2-grade');
+                if (grade2) grade2.value = '';
                 const sel2 = document.getElementById('our-player-2');
-                if (sel2) sel2.value = '';
+                if (sel2) {
+                    sel2.value = '';
+                    sel2.disabled = true;
+                    sel2.innerHTML = '<option value="">請先選擇年級</option>';
+                }
                 const cust2 = document.getElementById('our-player-2-custom');
                 if (cust2) {
                     cust2.value = '';
                     cust2.style.display = 'none';
+                    cust2.required = false;
                 }
             }
             if (oppGroup) {
@@ -394,6 +527,7 @@ class TableTennisRecordSystem {
             this.updateStats();
             this.displayPlayerStats();
         } else if (tabName === 'history') {
+            this.initializeFilters();
             this.displayHistory();
         }
     }
@@ -750,22 +884,23 @@ class TableTennisRecordSystem {
             
             // 延遲檢查：給Sheety時間同步
             setTimeout(async () => {
-                console.log('🔄 5秒後檢查Google Sheets同步狀況...');
+                console.log('🔄 5秒後檢查後台資料庫同步狀況...');
                 await this.fetchMatchesFromSheet();
                 
                 if (this.matches.length === 0) {
-                    console.error('⚠️ 警告：Google Sheets中仍無資料！');
+                    console.error('⚠️ 警告：後台資料庫中仍無資料！');
                     console.error('可能的問題：');
-                    console.error('1. Sheety權限設定錯誤');
-                    console.error('2. Google Sheets連接問題');
-                    console.error('3. 工作表名稱不匹配');
-                    this.showErrorMessage('警告：資料可能未同步到Google Sheets\n請檢查Sheety權限設定');
+                    console.error('1. 資料庫權限設定錯誤');
+                    console.error('2. 後台資料庫連接問題');
+                    console.error('3. 資料表名稱不匹配');
+                    this.showErrorMessage('警告：資料可能未同步到後台資料庫\n請檢查權限設定');
                 } else {
                     console.log('✅ 資料同步成功！');
+                    this.showSuccessMessage('✅ 資料已成功同步到後台資料庫！');
                 }
             }, 5000);
             
-            this.showSuccessMessage('API回應成功！正在檢查Google Sheets同步...');
+            this.showSuccessMessage('正在同步後台資料庫...');
             
         } catch (err) {
             this.hideLoadingMessage();
@@ -827,9 +962,14 @@ class TableTennisRecordSystem {
         this.showLoadingMessage('正在刪除記錄...');
         
         try {
-            const url = `${this.apiUrl}?id=${id}`;
-            const response = await fetch(url, { 
-                method: 'DELETE'
+            // 使用POST模擬DELETE，避免CORS問題
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('id', id);
+            
+            const response = await fetch(this.apiUrl, { 
+                method: 'POST',
+                body: formData
             });
             
             if (!response.ok) {
@@ -910,11 +1050,27 @@ class TableTennisRecordSystem {
         const container = document.getElementById('history-list');
         if (!container) return;
         container.innerHTML = '';
+        
         if (this.matches.length === 0) {
             container.innerHTML = '<p>尚無比賽記錄</p>';
+            this.updateResultsCount(0, 0);
             return;
         }
-        const sorted = [...this.matches].sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        // 使用篩選後的資料，如果沒有篩選則使用全部資料
+        const matchesToShow = this.filteredMatches.length > 0 || this.hasActiveFilters() 
+            ? this.filteredMatches 
+            : this.matches;
+            
+        const sorted = [...matchesToShow].sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        if (sorted.length === 0) {
+            container.innerHTML = '<p>沒有符合條件的比賽記錄</p>';
+            this.updateResultsCount(0, this.matches.length);
+            return;
+        }
+        
+        this.updateResultsCount(sorted.length, this.matches.length);
         sorted.forEach(match => {
             const div = document.createElement('div');
             div.className = `history-item ${match.result}`;
@@ -1009,7 +1165,7 @@ class TableTennisRecordSystem {
         setTimeout(() => {
             toast.style.animation = 'fadeOut 0.3s ease';
             setTimeout(() => toast.remove(), 300);
-        }, 5000);
+        }, 3000);
     }
 
     validateMatchData(data) {
@@ -1090,10 +1246,144 @@ class TableTennisRecordSystem {
         }
     }
 
+    // 篩選功能方法
+    initializeFilters() {
+        this.populateFilterOptions();
+        this.filteredMatches = [];
+        this.clearFilterForm();
+    }
+    
+    populateFilterOptions() {
+        // 填充球員選項
+        const playerSelect = document.getElementById('filter-player');
+        if (playerSelect) {
+            playerSelect.innerHTML = '<option value="">全部球員</option>';
+            const allPlayers = new Set();
+            this.matches.forEach(match => {
+                match.ourPlayers.forEach(player => allPlayers.add(player));
+            });
+            [...allPlayers].sort().forEach(player => {
+                const option = document.createElement('option');
+                option.value = player;
+                option.textContent = player;
+                playerSelect.appendChild(option);
+            });
+        }
+        
+        // 填充對手學校選項
+        const opponentSelect = document.getElementById('filter-opponent');
+        if (opponentSelect) {
+            opponentSelect.innerHTML = '<option value="">全部學校</option>';
+            const allOpponents = new Set(this.matches.map(match => match.opponentSchool));
+            [...allOpponents].sort().forEach(school => {
+                const option = document.createElement('option');
+                option.value = school;
+                option.textContent = school;
+                opponentSelect.appendChild(option);
+            });
+        }
+    }
+    
+    hasActiveFilters() {
+        return Object.values(this.activeFilters).some(value => value !== '');
+    }
+    
+    applyFilters() {
+        // 獲取篩選條件
+        this.activeFilters.player = document.getElementById('filter-player')?.value || '';
+        this.activeFilters.matchType = document.getElementById('filter-match-type')?.value || '';
+        this.activeFilters.result = document.getElementById('filter-result')?.value || '';
+        this.activeFilters.opponent = document.getElementById('filter-opponent')?.value || '';
+        this.activeFilters.dateStart = document.getElementById('filter-date-start')?.value || '';
+        this.activeFilters.dateEnd = document.getElementById('filter-date-end')?.value || '';
+        
+        // 篩選比賽記錄
+        this.filteredMatches = this.matches.filter(match => {
+            // 球員篩選
+            if (this.activeFilters.player && !match.ourPlayers.includes(this.activeFilters.player)) {
+                return false;
+            }
+            
+            // 比賽類型篩選
+            if (this.activeFilters.matchType && match.matchType !== this.activeFilters.matchType) {
+                return false;
+            }
+            
+            // 比賽結果篩選
+            if (this.activeFilters.result && match.result !== this.activeFilters.result) {
+                return false;
+            }
+            
+            // 對手學校篩選
+            if (this.activeFilters.opponent && match.opponentSchool !== this.activeFilters.opponent) {
+                return false;
+            }
+            
+            // 日期範圍篩選
+            if (this.activeFilters.dateStart && match.date < this.activeFilters.dateStart) {
+                return false;
+            }
+            
+            if (this.activeFilters.dateEnd && match.date > this.activeFilters.dateEnd) {
+                return false;
+            }
+            
+            return true;
+        });
+        
+        // 重新顯示歷史記錄
+        this.displayHistory();
+    }
+    
+    clearFilters() {
+        this.activeFilters = {
+            player: '',
+            matchType: '',
+            result: '',
+            opponent: '',
+            dateStart: '',
+            dateEnd: ''
+        };
+        this.filteredMatches = [];
+        this.clearFilterForm();
+        this.displayHistory();
+    }
+    
+    clearFilterForm() {
+        document.getElementById('filter-player').value = '';
+        document.getElementById('filter-match-type').value = '';
+        document.getElementById('filter-result').value = '';
+        document.getElementById('filter-opponent').value = '';
+        document.getElementById('filter-date-start').value = '';
+        document.getElementById('filter-date-end').value = '';
+    }
+    
+    updateResultsCount(showing, total) {
+        const countElement = document.getElementById('results-count');
+        if (countElement) {
+            if (showing === total) {
+                countElement.textContent = `顯示全部 ${total} 筆記錄`;
+            } else {
+                countElement.textContent = `顯示 ${showing} / ${total} 筆記錄`;
+            }
+        }
+    }
+
     resetForm() {
         const form = document.getElementById('match-form');
         if (form) form.reset();
         document.getElementById('match-date').value = new Date().toISOString().split('T')[0];
+        
+        // 重置年級選單和球員選單
+        const grade1 = document.getElementById('our-player-grade');
+        if (grade1) grade1.value = '';
+        
+        const player1 = document.getElementById('our-player');
+        if (player1) {
+            player1.disabled = true;
+            player1.innerHTML = '<option value="">請先選擇年級</option>';
+        }
+        
         // 隱藏自訂欄位
         const cust1 = document.getElementById('our-player-custom');
         if (cust1) {
@@ -1105,8 +1395,19 @@ class TableTennisRecordSystem {
             cust2.style.display = 'none';
             cust2.required = false;
         }
+        
+        // 隱藏雙打相關欄位
         const group1 = document.getElementById('our-player-2-group');
-        if (group1) group1.style.display = 'none';
+        if (group1) {
+            group1.style.display = 'none';
+            const grade2 = document.getElementById('our-player-2-grade');
+            if (grade2) grade2.value = '';
+            const player2 = document.getElementById('our-player-2');
+            if (player2) {
+                player2.disabled = true;
+                player2.innerHTML = '<option value="">請先選擇年級</option>';
+            }
+        }
         const group2 = document.getElementById('opponent-player-2-group');
         if (group2) group2.style.display = 'none';
     }
@@ -1122,6 +1423,31 @@ function showTab(tabName, button) {
         }
     } catch (error) {
         console.error('分頁切換錯誤:', error);
+    }
+}
+
+// 暴露篩選函數給 HTML
+function applyFilters() {
+    try {
+        if (system && typeof system.applyFilters === 'function') {
+            system.applyFilters();
+        } else {
+            console.error('系統尚未初始化或applyFilters方法不存在');
+        }
+    } catch (error) {
+        console.error('套用篩選錯誤:', error);
+    }
+}
+
+function clearFilters() {
+    try {
+        if (system && typeof system.clearFilters === 'function') {
+            system.clearFilters();
+        } else {
+            console.error('系統尚未初始化或clearFilters方法不存在');
+        }
+    } catch (error) {
+        console.error('清除篩選錯誤:', error);
     }
 }
 

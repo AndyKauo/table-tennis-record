@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年級分組測試</title>
+</head>
+<body>
+    <h1>年級分組測試</h1>
+    <div id="result"></div>
+
+    <script>
+        // 球員資料對應表 (根據grade.png建立)
+        const playerData = {
+            '陳敬允': '10201',
+            '黃梓恩': '10201', // 需要確認實際座號
+            '許晉承': '20205',
+            '李知昱': '20205', // 需要確認實際座號
+            '徐寓凱': '30503',
+            '游翔凱': '30603',
+            '蔡孟廷': '30703',
+            '莊皓嵐': '30809',
+            '陳禹澤': '30812',
+            '王語瑄': '30823',
+            '張愷均': '30905',
+            '張振齊': '40311',
+            '周禹顥': '40309',
+            '郭仁傑': '40310',
+            '黃柏睿': '40404',
+            '陳泓睿': '40511',
+            '李予閎': '40512',
+            '鄭立楷': '40710',
+            '張芮庭': '50134',
+            '陳沛筠': '50224',
+            '葉立勤': '50306',
+            '郭宸睿': '50612',
+            '李定謙': '50701',
+            '王嘉旻': '50713',
+            '陳妍齊': '50829',
+            '林培鈞': '50904'
+        };
+
+        // 根據座號判斷年級 (座號第一位數字 + 1)
+        function getGradeFromStudentId(studentId) {
+            if (!studentId || studentId.length < 5) return null;
+            const gradeDigit = parseInt(studentId.charAt(0));
+            return gradeDigit + 1; // 暑假後升級，所以 +1
+        }
+
+        // 根據年級獲取該年級的所有球員
+        function getPlayersByGrade(grade) {
+            const players = [];
+            for (const [name, studentId] of Object.entries(playerData)) {
+                if (getGradeFromStudentId(studentId) === parseInt(grade)) {
+                    players.push(name);
+                }
+            }
+            return players.sort(); // 按名字排序
+        }
+
+        // 測試並顯示結果
+        let html = '<h2>各年級球員分佈：</h2>';
+        for (let grade = 1; grade <= 6; grade++) {
+            const players = getPlayersByGrade(grade);
+            html += `<h3>${grade}年級 (${players.length}人)：</h3>`;
+            html += '<ul>';
+            players.forEach(player => {
+                const studentId = playerData[player];
+                html += `<li>${player} (座號: ${studentId})</li>`;
+            });
+            html += '</ul>';
+        }
+
+        document.getElementById('result').innerHTML = html;
+    </script>
+</body>
+</html>

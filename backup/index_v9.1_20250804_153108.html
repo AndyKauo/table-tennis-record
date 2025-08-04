@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- v9版本：支援離線模式的桌球校隊比賽記錄系統 -->
-    <title>🏓 百齡國小桌球校隊比賽記錄系統 v9</title>
+    <!-- v9.1版本：支援年級分類選擇的桌球校隊比賽記錄系統 -->
+    <title>🏓 百齡國小桌球校隊比賽記錄系統 v9.1</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <!-- v9版本頁面標題 -->
-            <h1>🏓 百齡國小桌球校隊比賽記錄系統 v9</h1>
+            <!-- v9.1版本頁面標題 -->
+            <h1>🏓 百齡國小桌球校隊比賽記錄系統 v9.1</h1>
             <nav>
                 <!-- 傳入 this 讓 js 可以切換 active 樣式 -->
                 <button class="nav-btn active" onclick="showTab('record', this)">記錄比賽</button>
@@ -48,72 +48,43 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="our-player-grade">我方球員年級：</label>
+                    <select id="our-player-grade" required>
+                        <option value="">請先選擇年級</option>
+                        <option value="1">1年級</option>
+                        <option value="2">2年級</option>
+                        <option value="3">3年級</option>
+                        <option value="4">4年級</option>
+                        <option value="5">5年級</option>
+                        <option value="6">6年級</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label for="our-player">我方球員：</label>
-                    <select id="our-player" required>
-                        <option value="">請選擇球員</option>
-                        <option value="陳敬允">陳敬允</option>
-                        <option value="黃梓恩">黃梓恩</option>
-                        <option value="許晉承">許晉承</option>
-                        <option value="李知昱">李知昱</option>
-                        <option value="徐寓凱">徐寓凱</option>
-                        <option value="游翔凱">游翔凱</option>
-                        <option value="蔡孟廷">蔡孟廷</option>
-                        <option value="莊皓嵐">莊皓嵐</option>
-                        <option value="陳禹澤">陳禹澤</option>
-                        <option value="王語瑄">王語瑄</option>
-                        <option value="張愷均">張愷均</option>
-                        <option value="張振齊">張振齊</option>
-                        <option value="周禹顥">周禹顥</option>
-                        <option value="郭仁傑">郭仁傑</option>
-                        <option value="黃柏睿">黃柏睿</option>
-                        <option value="陳泓睿">陳泓睿</option>
-                        <option value="李予閎">李予閎</option>
-                        <option value="鄭立楷">鄭立楷</option>
-                        <option value="張芮庭">張芮庭</option>
-                        <option value="陳沛筠">陳沛筠</option>
-                        <option value="葉立勤">葉立勤</option>
-                        <option value="郭宸睿">郭宸睿</option>
-                        <option value="李定謙">李定謙</option>
-                        <option value="王嘉旻">王嘉旻</option>
-                        <option value="陳妍齊">陳妍齊</option>
-                        <option value="林培鈞">林培鈞</option>
-                        <option value="other">其他（手動輸入）</option>
+                    <select id="our-player" required disabled>
+                        <option value="">請先選擇年級</option>
                     </select>
                     <input type="text" id="our-player-custom" placeholder="請輸入其他球員姓名" style="display:none; margin-top:10px;">
                     <!-- 第二位我方球員區塊：僅在雙打時顯示 -->
                     <div id="our-player-2-group" style="display:none; margin-top:10px;">
-                        <label for="our-player-2">我方球員（二）：</label>
-                        <select id="our-player-2">
-                            <option value="">請選擇球員</option>
-                            <option value="陳敬允">陳敬允</option>
-                            <option value="黃梓恩">黃梓恩</option>
-                            <option value="許晉承">許晉承</option>
-                            <option value="李知昱">李知昱</option>
-                            <option value="徐寓凱">徐寓凱</option>
-                            <option value="游翔凱">游翔凱</option>
-                            <option value="蔡孟廷">蔡孟廷</option>
-                            <option value="莊皓嵐">莊皓嵐</option>
-                            <option value="陳禹澤">陳禹澤</option>
-                            <option value="王語瑄">王語瑄</option>
-                            <option value="張愷均">張愷均</option>
-                            <option value="張振齊">張振齊</option>
-                            <option value="周禹顥">周禹顥</option>
-                            <option value="郭仁傑">郭仁傑</option>
-                            <option value="黃柏睿">黃柏睿</option>
-                            <option value="陳泓睿">陳泓睿</option>
-                            <option value="李予閎">李予閎</option>
-                            <option value="鄭立楷">鄭立楷</option>
-                            <option value="張芮庭">張芮庭</option>
-                            <option value="陳沛筠">陳沛筠</option>
-                            <option value="葉立勤">葉立勤</option>
-                            <option value="郭宸睿">郭宸睿</option>
-                            <option value="李定謙">李定謙</option>
-                            <option value="王嘉旻">王嘉旻</option>
-                            <option value="陳妍齊">陳妍齊</option>
-                            <option value="林培鈞">林培鈞</option>
-                            <option value="other">其他（手動輸入）</option>
+                        <label for="our-player-2-grade">我方球員（二）年級：</label>
+                        <select id="our-player-2-grade">
+                            <option value="">請先選擇年級</option>
+                            <option value="1">1年級</option>
+                            <option value="2">2年級</option>
+                            <option value="3">3年級</option>
+                            <option value="4">4年級</option>
+                            <option value="5">5年級</option>
+                            <option value="6">6年級</option>
                         </select>
-                        <input type="text" id="our-player-2-custom" placeholder="請輸入其他球員姓名" style="display:none; margin-top:10px;">
+                        <div style="margin-top:10px;">
+                            <label for="our-player-2">我方球員（二）：</label>
+                            <select id="our-player-2" disabled>
+                                <option value="">請先選擇年級</option>
+                            </select>
+                            <input type="text" id="our-player-2-custom" placeholder="請輸入其他球員姓名" style="display:none; margin-top:10px;">
+                        </div>
                     </div>
                 </div>
 
@@ -211,7 +182,67 @@
         <!-- 歷史記錄頁面 -->
         <div id="history-tab" class="tab-content">
             <h2>比賽歷史記錄</h2>
+            
+            <!-- 篩選控制區域 -->
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="filter-player">篩選球員：</label>
+                        <select id="filter-player">
+                            <option value="">全部球員</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filter-match-type">比賽類型：</label>
+                        <select id="filter-match-type">
+                            <option value="">全部類型</option>
+                            <option value="team">團體賽</option>
+                            <option value="singles">個人單打</option>
+                            <option value="doubles">個人雙打</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filter-result">比賽結果：</label>
+                        <select id="filter-result">
+                            <option value="">全部結果</option>
+                            <option value="win">勝</option>
+                            <option value="lose">負</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="filter-opponent">對手學校：</label>
+                        <select id="filter-opponent">
+                            <option value="">全部學校</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filter-date-start">開始日期：</label>
+                        <input type="date" id="filter-date-start">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filter-date-end">結束日期：</label>
+                        <input type="date" id="filter-date-end">
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="button" class="filter-btn apply-btn" onclick="applyFilters()">套用篩選</button>
+                    <button type="button" class="filter-btn clear-btn" onclick="clearFilters()">清除篩選</button>
+                </div>
+            </div>
+            
+            <!-- 比賽記錄顯示區域 -->
             <div class="match-history">
+                <div class="results-summary">
+                    <span id="results-count">顯示全部記錄</span>
+                </div>
                 <div id="history-list"></div>
             </div>
         </div>

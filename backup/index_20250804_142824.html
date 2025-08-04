@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- v9.2版本：新增系統說明、台灣時間的桌球校隊比賽記錄系統 -->
-    <title>🏓 百齡國小桌球校隊比賽記錄系統 v9.2</title>
+    <!-- v9版本：支援離線模式的桌球校隊比賽記錄系統 -->
+    <title>🏓 百齡國小桌球校隊比賽記錄系統 v9</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <!-- v9.2版本頁面標題 -->
-            <h1>🏓 百齡國小桌球校隊比賽記錄系統 v9.2</h1>
+            <!-- v9版本頁面標題 -->
+            <h1>🏓 百齡國小桌球校隊比賽記錄系統 v9</h1>
             <nav>
                 <!-- 傳入 this 讓 js 可以切換 active 樣式 -->
                 <button class="nav-btn active" onclick="showTab('record', this)">記錄比賽</button>
@@ -20,76 +20,9 @@
             </nav>
         </header>
 
-        <!-- 系統說明區塊 -->
-        <div class="system-intro">
-            <div class="intro-container">
-                <div class="intro-header">
-                    <h2>📊 智慧比賽記錄系統</h2>
-                    <p class="intro-subtitle">為百齡桌球校隊量身打造的比賽管理工具</p>
-                </div>
-                
-                <div class="intro-content">
-                    <div class="problem-solution">
-                        <div class="problem">
-                            <div class="icon">❓</div>
-                            <h3>遇到的問題</h3>
-                            <p>明天要比賽了，對手好像以前有打過，但又不太確定...</p>
-                            <ul>
-                                <li>同年級出去比賽，常常會遇到以前打過的選手</li>
-                                <li>忘記對手的打法特點和實力</li>
-                                <li>不知道自己球員的表現趨勢</li>
-                                <li>無法累積比賽經驗做戰術參考</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="solution">
-                            <div class="icon">💡</div>
-                            <h3>系統能幫你做什麼</h3>
-                            <p>系統化記錄每場比賽，累積寶貴的對戰資料</p>
-                            <ul>
-                                <li>記錄比分、對手學校、球員表現</li>
-                                <li>分析個人勝率和成長軌跡</li>
-                                <li>建立對手資料庫，戰術筆記備忘</li>
-                                <li>支援離線使用，隨時隨地記錄</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="how-to-use">
-                        <h3>📝 如何使用</h3>
-                        <div class="steps">
-                            <div class="step">
-                                <span class="step-number">1</span>
-                                <p><strong>記錄比賽</strong> - 輸入對手、球員、比分等資訊</p>
-                            </div>
-                            <div class="step">
-                                <span class="step-number">2</span>
-                                <p><strong>查看統計</strong> - 分析球員表現和勝率趨勢</p>
-                            </div>
-                            <div class="step">
-                                <span class="step-number">3</span>
-                                <p><strong>歷史查詢</strong> - 回顧過往比賽，制定戰術</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="intro-footer">
-                    <button class="cta-button" onclick="hideSystemIntro()">
-                        📝 開始記錄 (收合說明)
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <!-- 記錄比賽頁面 -->
         <div id="record-tab" class="tab-content active">
-            <div class="record-header">
-                <h2>新增比賽記錄</h2>
-                <button class="expand-intro-btn" onclick="showSystemIntro()" style="display:none;">
-                    ❓ 系統說明
-                </button>
-            </div>
+            <h2>新增比賽記錄</h2>
             
             <form id="match-form">
                 <div class="form-group">
@@ -204,9 +137,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="result">比賽結果：<small class="auto-hint">輸入比分後自動判斷</small></label>
+                    <label for="result">比賽結果：</label>
                     <select id="result" required>
-                        <option value="">輸入比分後自動判斷</option>
+                        <option value="">請選擇</option>
                         <option value="win">勝</option>
                         <option value="lose">負</option>
                     </select>

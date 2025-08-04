@@ -1,18 +1,3 @@
-// 台灣時間相關函數
-function getTaiwanTime() {
-    // 取得台灣時間 (UTC+8)
-    const now = new Date();
-    const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-    return taiwanTime.toISOString();
-}
-
-function getTaiwanDate() {
-    // 取得台灣日期 (YYYY-MM-DD格式)
-    const now = new Date();
-    const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-    return taiwanTime.toISOString().split('T')[0];
-}
-
 class TableTennisRecordSystem {
     constructor() {
         // Google Apps Script API URL - 請替換為你的Apps Script部署URL
@@ -82,8 +67,8 @@ class TableTennisRecordSystem {
         this.setupEventListeners();
         this.setupNetworkMonitoring();
         
-        // 設定今天日期（台灣時間）
-        const today = getTaiwanDate();
+        // 設定今天日期
+        const today = new Date().toISOString().split('T')[0];
         document.getElementById('match-date').value = today;
         
         // 驗證系統設定
@@ -451,7 +436,7 @@ class TableTennisRecordSystem {
             // 1. 測試離線模式保存
             console.log('📝 測試離線模式保存...');
             const testMatch = {
-                date: getTaiwanDate(),
+                date: new Date().toISOString().split('T')[0],
                 opponentSchool: '測試學校',
                 matchType: 'singles',
                 ourPlayers: ['測試球員'],
@@ -459,7 +444,7 @@ class TableTennisRecordSystem {
                 scores: [{ our: 11, opponent: 9 }],
                 result: 'win',
                 notes: '同步測試',
-                timestamp: getTaiwanTime()
+                timestamp: new Date().toISOString()
             };
             
             this.saveToOfflineMode(testMatch);
@@ -508,7 +493,7 @@ class TableTennisRecordSystem {
                 scores: JSON.stringify(matchData.scores),
                 result: matchData.result,
                 notes: matchData.notes,
-                timestamp: matchData.timestamp || getTaiwanTime()
+                timestamp: matchData.timestamp || new Date().toISOString()
             }
         };
         
@@ -652,7 +637,7 @@ class TableTennisRecordSystem {
             scores: scores,
             result: document.getElementById('result').value,
             notes: document.getElementById('notes').value.trim(),
-            timestamp: getTaiwanTime()
+            timestamp: new Date().toISOString()
         };
         // 更新學校列表
         this.updateOpponentSchools(match.opponentSchool);
@@ -746,7 +731,7 @@ class TableTennisRecordSystem {
                 scores: item.scores ? JSON.parse(item.scores) : [],
                 result: item.result,
                 notes: item.notes,
-                timestamp: item.timestamp || item.date || getTaiwanTime() // 備用timestamp
+                timestamp: item.timestamp || item.date || new Date().toISOString() // 備用timestamp
             }));
             this.recomputePlayerStats();
             this.updateStats();
@@ -780,7 +765,7 @@ class TableTennisRecordSystem {
                 scores: match.scores && match.scores.length > 0 ? JSON.stringify(match.scores) : '[]',
                 result: match.result || 'win',
                 notes: match.notes || '',
-                timestamp: getTaiwanTime()
+                timestamp: new Date().toISOString()
             };
             
             // 最終檢查：確保沒有undefined、null值，並去除多餘空格
@@ -1387,7 +1372,7 @@ class TableTennisRecordSystem {
     resetForm() {
         const form = document.getElementById('match-form');
         if (form) form.reset();
-        document.getElementById('match-date').value = getTaiwanDate();
+        document.getElementById('match-date').value = new Date().toISOString().split('T')[0];
         
         // 重置年級選單和球員選單
         const grade1 = document.getElementById('our-player-grade');
@@ -1428,41 +1413,10 @@ class TableTennisRecordSystem {
     }
 }
 
-// 隱藏系統說明區塊
-function hideSystemIntro() {
-    const introSection = document.querySelector('.system-intro');
-    const expandBtn = document.querySelector('.expand-intro-btn');
-    if (introSection) {
-        introSection.style.display = 'none';
-    }
-    if (expandBtn) {
-        expandBtn.style.display = 'inline-block';
-    }
-}
-
-// 顯示系統說明區塊
-function showSystemIntro() {
-    const introSection = document.querySelector('.system-intro');
-    const expandBtn = document.querySelector('.expand-intro-btn');
-    if (introSection) {
-        introSection.style.display = 'block';
-    }
-    if (expandBtn) {
-        expandBtn.style.display = 'none';
-    }
-}
-
 // 將 showTab 函式暴露給 HTML
 function showTab(tabName, button) {
     try {
         if (system && typeof system.showTab === 'function') {
-            // 只在記錄比賽頁面顯示說明區塊，其他頁面隱藏
-            if (tabName === 'record') {
-                showSystemIntro();
-            } else {
-                hideSystemIntro();
-            }
-            
             system.showTab(tabName, button);
         } else {
             console.error('系統尚未初始化或showTab方法不存在');
