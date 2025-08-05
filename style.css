@@ -777,13 +777,60 @@ nav {
 /* 訪客計數器 */
 .visitor-counter {
     text-align: center;
-    padding: 20px 0 10px 0;
+    padding: 15px 0 10px 0;
     border-top: 1px solid #f0f0f0;
-    margin-top: 30px;
+    margin-top: 20px;
 }
 
 .counter-text {
     color: #bbb;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-family: monospace;
+}
+
+/* 手機版優化 */
+@media (max-width: 768px) {
+    .visitor-counter {
+        padding: 10px 0 8px 0;
+        margin-top: 15px;
+    }
+    
+    .counter-text {
+        font-size: 0.65rem;
+    }
+    
+    /* 修復同步狀態顯示過大問題 */
+    #sync-status {
+        font-size: 0.6rem !important;
+        padding: 0.2rem 0.4rem !important;
+        bottom: 60px !important; /* 避免與訪客計數器重疊 */
+        right: 10px !important;
+        max-width: 70% !important;
+        word-wrap: break-word !important;
+        border-radius: 12px !important;
+    }
+    
+    /* 優化表單在手機上的顯示 */
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        font-size: 0.9rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    /* 優化統計卡片在手機上的排版 */
+    .stats-summary {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
 }

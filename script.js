@@ -105,8 +105,10 @@ class TableTennisRecordSystem {
         // 根據localStorage狀態設定系統說明顯示
         this.initSystemIntroState();
         
-        // 記錄訪客並更新計數器
-        this.recordVisitor();
+        // 記錄訪客並更新計數器（延遲執行確保DOM完全載入）
+        setTimeout(() => {
+            this.recordVisitor();
+        }, 500);
     }
 
     /**
@@ -130,44 +132,45 @@ class TableTennisRecordSystem {
             if (this.isOnline && navigator.onLine) {
                 const visitorData = {
                     timestamp: getTaiwanTime(),
-                    userAgent: navigator.userAgent.substring(0, 100), // 限制長度
+                    userAgent: (navigator.userAgent || 'Unknown').substring(0, 50), // iOS Safari 相容
                     referrer: document.referrer || '直接訪問'
                 };
                 
-                // 使用 GET 方式避免 CORS 問題
-                const params = new URLSearchParams({
-                    action: 'recordVisitor',
-                    timestamp: visitorData.timestamp,
-                    userAgent: visitorData.userAgent.substring(0, 50), // 限制長度
-                    referrer: visitorData.referrer
-                });
+                // 使用 GET 方式避免 CORS 問題，加強iOS相容性
+                const params = new URLSearchParams();
+                params.append('action', 'recordVisitor');
+                params.append('timestamp', visitorData.timestamp);
+                params.append('userAgent', visitorData.userAgent);
+                params.append('referrer', visitorData.referrer);
                 
-                const response = await fetch(`${this.apiUrl}?${params.toString()}`, {
+                const url = `${this.apiUrl}?${params.toString()}`;
+                console.log('iOS Safari 訪客記錄URL:', url);
+                
+                // 使用更相容的fetch設定
+                const response = await fetch(url, {
                     method: 'GET',
-                    mode: 'cors'
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    cache: 'no-cache'
                 });
                 
                 if (response.ok) {
                     const result = await response.json();
-                    console.log('訪客記錄成功:', result);
-                    this.updateVisitorCount(result.totalVisitors);
+                    console.log('iOS Safari 訪客記錄成功:', result);
+                    this.updateVisitorCount(result.totalVisitors || '?');
                 } else {
-                    const errorText = await response.text();
-                    console.error('HTTP錯誤:', response.status, response.statusText);
-                    console.error('錯誤內容:', errorText);
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    console.error('iOS Safari HTTP錯誤:', response.status);
+                    this.updateVisitorCount('網路');
                 }
             } else {
-                // 離線模式：顯示預設計數
+                console.log('iOS Safari 離線模式');
                 this.updateVisitorCount('離線');
             }
         } catch (error) {
-            console.error('訪客記錄失敗:', error);
-            // 顯示詳細錯誤資訊供調試
-            console.error('錯誤詳情:', error.message);
-            console.error('API URL:', this.apiUrl);
-            // 顯示錯誤狀態
-            this.updateVisitorCount('錯誤');
+            console.error('iOS Safari 訪客記錄失敗:', error);
+            // iOS Safari 顯示更友善的錯誤狀態
+            this.updateVisitorCount('--');
         }
     }
     
@@ -175,9 +178,16 @@ class TableTennisRecordSystem {
      * 更新訪客計數顯示
      */
     updateVisitorCount(count) {
-        const counterElement = document.getElementById('visitor-count');
-        if (counterElement) {
-            counterElement.textContent = count;
+        try {
+            const counterElement = document.getElementById('visitor-count');
+            if (counterElement) {
+                counterElement.textContent = count;
+                console.log('iOS Safari 訪客計數更新:', count);
+            } else {
+                console.error('iOS Safari 找不到訪客計數元素');
+            }
+        } catch (error) {
+            console.error('iOS Safari 更新訪客計數失敗:', error);
         }
     }
 
@@ -650,20 +660,40 @@ class TableTennisRecordSystem {
      * 顯示統計分析頁面的載入訊息
      */
     showStatsLoadingMessage() {
-        // 清空統計卡片顯示載入中
-        document.getElementById('total-matches').textContent = '載入中...';
-        document.getElementById('wins').textContent = '載入中...';
-        document.getElementById('win-rate').textContent = '載入中...';
-        
-        // 清空球員列表並顯示載入訊息
-        const playerList = document.getElementById('player-list');
-        if (playerList) {
-            playerList.innerHTML = `
-                <div style="text-align: center; padding: 20px; color: #666;">
-                    <div style="margin-bottom: 10px;">📊 資料載入中...</div>
-                    <div style="font-size: 0.9em;">請稍候，正在從雲端讀取比賽記錄</div>  
-                </div>
-            `;
+        try {
+            // 清空統計卡片顯示載入中
+            const totalMatches = document.getElementById('total-matches');
+            const wins = document.getElementById('wins');
+            const winRate = document.getElementById('win-rate');
+            
+            if (totalMatches) totalMatches.textContent = '載入中...';
+            if (wins) wins.textContent = '載入中...';
+            if (winRate) winRate.textContent = '載入中...';
+            
+            // 清空球員列表並顯示載入訊息
+            const playerList = document.getElementById('player-list');
+            if (playerList) {
+                // 使用更相容的方式創建元素
+                playerList.innerHTML = '';
+                const loadingDiv = document.createElement('div');
+                loadingDiv.style.textAlign = 'center';
+                loadingDiv.style.padding = '20px';
+                loadingDiv.style.color = '#666';
+                
+                const titleDiv = document.createElement('div');
+                titleDiv.style.marginBottom = '10px';
+                titleDiv.textContent = '📊 資料載入中...';
+                
+                const subtitleDiv = document.createElement('div');
+                subtitleDiv.style.fontSize = '0.9em';
+                subtitleDiv.textContent = '請稍候，正在從雲端讀取比賽記錄';
+                
+                loadingDiv.appendChild(titleDiv);
+                loadingDiv.appendChild(subtitleDiv);
+                playerList.appendChild(loadingDiv);
+            }
+        } catch (error) {
+            console.error('載入提醒顯示失敗:', error);
         }
     }
 
