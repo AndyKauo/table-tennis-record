@@ -1636,59 +1636,6 @@ function showSystemIntro() {
     localStorage.setItem('systemIntroCollapsed', 'false');
 }
 
-// 篩選面板收合功能
-function toggleFilterPanel() {
-    const filterContent = document.getElementById('filter-content');
-    const toggleIcon = document.getElementById('filter-toggle-icon');
-    
-    if (filterContent && toggleIcon) {
-        const isCollapsed = filterContent.classList.contains('collapsed');
-        
-        if (isCollapsed) {
-            // 展開
-            filterContent.classList.remove('collapsed');
-            toggleIcon.classList.remove('collapsed');
-            toggleIcon.textContent = '▼';
-            localStorage.setItem('filterPanelCollapsed', 'false');
-        } else {
-            // 收合
-            filterContent.classList.add('collapsed');
-            toggleIcon.classList.add('collapsed');
-            toggleIcon.textContent = '▶';
-            localStorage.setItem('filterPanelCollapsed', 'true');
-        }
-    }
-}
-
-// 初始化篩選面板狀態
-function initFilterPanelState() {
-    const isCollapsed = localStorage.getItem('filterPanelCollapsed') === 'true';
-    const filterContent = document.getElementById('filter-content');
-    const toggleIcon = document.getElementById('filter-toggle-icon');
-    
-    if (isCollapsed && filterContent && toggleIcon) {
-        filterContent.classList.add('collapsed');
-        toggleIcon.classList.add('collapsed');
-        toggleIcon.textContent = '▶';
-    }
-}
-
-// 點擊標題也能收合
-document.addEventListener('DOMContentLoaded', function() {
-    const filterHeader = document.querySelector('.filter-header');
-    if (filterHeader) {
-        filterHeader.addEventListener('click', function(e) {
-            // 如果點擊的不是按鈕本身，也觸發收合
-            if (!e.target.closest('.filter-toggle-btn')) {
-                toggleFilterPanel();
-            }
-        });
-    }
-    
-    // 初始化篩選面板狀態
-    initFilterPanelState();
-});
-
 // 將 showTab 函式暴露給 HTML
 function showTab(tabName, button) {
     try {

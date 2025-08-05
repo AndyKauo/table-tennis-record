@@ -788,6 +788,64 @@ nav {
     font-family: monospace;
 }
 
+/* 篩選面板收合功能 */
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid #e1e8ed;
+    margin-bottom: 1rem;
+    cursor: pointer;
+}
+
+.filter-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #333;
+    user-select: none;
+}
+
+.filter-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.3rem;
+    font-size: 1rem;
+    color: #667eea;
+    transition: transform 0.3s ease;
+}
+
+.filter-toggle-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 4px;
+}
+
+.filter-content {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.filter-content.collapsed {
+    max-height: 0;
+    margin-bottom: 0;
+    opacity: 0;
+}
+
+.filter-content:not(.collapsed) {
+    max-height: 500px;
+    opacity: 1;
+}
+
+#filter-toggle-icon {
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+#filter-toggle-icon.collapsed {
+    transform: rotate(-90deg);
+}
+
 /* 手機版優化 */
 @media (max-width: 768px) {
     .visitor-counter {
@@ -832,5 +890,19 @@ nav {
     
     .stat-number {
         font-size: 1.5rem;
+    }
+    
+    /* 手機版篩選面板優化 */
+    .filter-header {
+        padding: 0.6rem 0;
+    }
+    
+    .filter-header h3 {
+        font-size: 0.9rem;
+    }
+    
+    .filter-toggle-btn {
+        padding: 0.2rem;
+        font-size: 0.9rem;
     }
 }

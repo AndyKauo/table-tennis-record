@@ -250,6 +250,13 @@
             
             <!-- 篩選控制區域 -->
             <div class="filter-section">
+                <div class="filter-header">
+                    <h3>🔍 篩選條件</h3>
+                    <button type="button" class="filter-toggle-btn" onclick="toggleFilterPanel()">
+                        <span id="filter-toggle-icon">▼</span>
+                    </button>
+                </div>
+                <div class="filter-content" id="filter-content">
                 <div class="filter-row">
                     <div class="filter-group">
                         <label for="filter-player">篩選球員：</label>
@@ -299,6 +306,7 @@
                 <div class="filter-actions">
                     <button type="button" class="filter-btn apply-btn" onclick="applyFilters()">套用篩選</button>
                     <button type="button" class="filter-btn clear-btn" onclick="clearFilters()">清除篩選</button>
+                </div>
                 </div>
             </div>
             
