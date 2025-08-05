@@ -4,9 +4,30 @@
 // 設定你的Google Sheets ID (請替換為你的實際ID)
 const SHEET_ID = '1y4o8XYv8KfcyKn11fDNxZSHp2rLILDXjiQLstvkvYDQ';
 const SHEET_NAME = 't1';
+const VISITOR_SHEET_NAME = 'visitors';
+
+// 處理 CORS 預檢請求 - 使用兼容的方法
+function doOptions(e) {
+  const output = ContentService.createTextOutput('');
+  output.setMimeType(ContentService.MimeType.TEXT);
+  // 注意：舊版 Apps Script 不支援 setHeaders，改用 manifest 設定
+  return output;
+}
+
+// 創建 JSON 回應（無法直接設定 CORS 標頭，需要在 manifest 中設定）
+function createCORSResponse(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
 
 function doGet(e) {
   try {
+    // 檢查是否為訪客記錄請求
+    if (e.parameter && e.parameter.action === 'recordVisitor') {
+      return handleVisitorRecordGet(e.parameter);
+    }
+    
     const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
     
     // 獲取所有資料
@@ -15,9 +36,7 @@ function doGet(e) {
     
     if (values.length <= 1) {
       const result = { t1: [] };
-      return ContentService
-        .createTextOutput(JSON.stringify(result))
-        .setMimeType(ContentService.MimeType.JSON);
+      return createCORSResponse(result);
     }
     
     // 第一列是標題
@@ -35,30 +54,19 @@ function doGet(e) {
     
     const result = { t1: records };
     
-    return ContentService
-      .createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
+    return createCORSResponse(result);
       
   } catch (error) {
     const result = { 
       error: error.toString(),
       message: '讀取資料失敗' 
     };
-    return ContentService
-      .createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
+    return createCORSResponse(result);
   }
 }
 
 function doPost(e) {
   try {
-    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
-    
-    // 檢查是否為刪除請求
-    if (e.parameter && e.parameter.action === 'delete') {
-      return handleDelete(e.parameter.id, sheet);
-    }
-    
     // 處理FormData或JSON
     let requestData;
     if (e.parameter && e.parameter.data) {
@@ -69,6 +77,18 @@ function doPost(e) {
       requestData = JSON.parse(e.postData.contents);
     } else {
       throw new Error('無效的請求資料格式');
+    }
+    
+    // 檢查是否為訪客記錄請求
+    if (requestData.action === 'recordVisitor') {
+      return handleVisitorRecord(requestData.data);
+    }
+    
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+    
+    // 檢查是否為刪除請求
+    if (e.parameter && e.parameter.action === 'delete') {
+      return handleDelete(e.parameter.id, sheet);
     }
     
     const matchData = requestData.t1;
@@ -99,18 +119,14 @@ function doPost(e) {
     
     const result = { t1: newRecord };
     
-    return ContentService
-      .createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
+    return createCORSResponse(result);
       
   } catch (error) {
     const result = { 
       error: error.toString(),
       message: '新增資料失敗: ' + error.message
     };
-    return ContentService
-      .createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
+    return createCORSResponse(result);
   }
 }
 
@@ -136,17 +152,93 @@ function handleDelete(idParam, sheet) {
       deletedId: id 
     };
     
-    return ContentService
-      .createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
+    return createCORSResponse(result);
       
   } catch (error) {
     const result = { 
       error: error.toString(),
       message: '刪除失敗: ' + error.message
     };
-    return ContentService
-      .createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
+    return createCORSResponse(result);
+  }
+}
+
+// 處理訪客記錄請求 (GET 方式)
+function handleVisitorRecordGet(params) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+    let visitorSheet = spreadsheet.getSheetByName(VISITOR_SHEET_NAME);
+    
+    // 如果訪客工作表不存在，建立它
+    if (!visitorSheet) {
+      visitorSheet = spreadsheet.insertSheet(VISITOR_SHEET_NAME);
+      // 建立標題行
+      visitorSheet.getRange(1, 1, 1, 3).setValues([['timestamp', 'userAgent', 'referrer']]);
+    }
+    
+    // 新增訪客記錄
+    visitorSheet.appendRow([
+      params.timestamp || new Date().toISOString(),
+      params.userAgent || 'Unknown',
+      params.referrer || '直接訪問'
+    ]);
+    
+    // 計算總訪客數（扣除標題行）
+    const totalVisitors = Math.max(0, visitorSheet.getLastRow() - 1);
+    
+    const result = {
+      success: true,
+      totalVisitors: totalVisitors,
+      message: '訪客記錄成功'
+    };
+    
+    return createCORSResponse(result);
+      
+  } catch (error) {
+    const result = {
+      error: error.toString(),
+      message: '訪客記錄失敗: ' + error.message
+    };
+    return createCORSResponse(result);
+  }
+}
+
+// 處理訪客記錄請求 (POST 方式 - 保留以防需要)
+function handleVisitorRecord(visitorData) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+    let visitorSheet = spreadsheet.getSheetByName(VISITOR_SHEET_NAME);
+    
+    // 如果訪客工作表不存在，建立它
+    if (!visitorSheet) {
+      visitorSheet = spreadsheet.insertSheet(VISITOR_SHEET_NAME);
+      // 建立標題行
+      visitorSheet.getRange(1, 1, 1, 3).setValues([['timestamp', 'userAgent', 'referrer']]);
+    }
+    
+    // 新增訪客記錄
+    visitorSheet.appendRow([
+      visitorData.timestamp,
+      visitorData.userAgent,
+      visitorData.referrer
+    ]);
+    
+    // 計算總訪客數（扣除標題行）
+    const totalVisitors = Math.max(0, visitorSheet.getLastRow() - 1);
+    
+    const result = {
+      success: true,
+      totalVisitors: totalVisitors,
+      message: '訪客記錄成功'
+    };
+    
+    return createCORSResponse(result);
+      
+  } catch (error) {
+    const result = {
+      error: error.toString(),
+      message: '訪客記錄失敗: ' + error.message
+    };
+    return createCORSResponse(result);
   }
 }

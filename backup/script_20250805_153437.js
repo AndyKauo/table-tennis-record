@@ -63,7 +63,6 @@ class TableTennisRecordSystem {
         this.pendingMatches = JSON.parse(localStorage.getItem('pendingMatches') || '[]');
         this.isOnline = navigator.onLine;
         this.syncInProgress = false;
-        this.dataLoading = true; // 追蹤資料載入狀態
         
         // 篩選功能相關
         this.filteredMatches = [];
@@ -90,9 +89,6 @@ class TableTennisRecordSystem {
         // 驗證系統設定
         this.validateConfiguration();
         
-        // 預設顯示記錄分頁（在讀取資料前設定，避免異步問題）
-        this.showTab('record', document.querySelector('.nav-btn.active'));
-        
         // 嘗試從 Sheety 讀取資料
         await this.fetchMatchesFromSheet();
         
@@ -102,83 +98,8 @@ class TableTennisRecordSystem {
         // 檢查是否有待同步資料
         this.updateSyncStatus();
         
-        // 根據localStorage狀態設定系統說明顯示
-        this.initSystemIntroState();
-        
-        // 記錄訪客並更新計數器
-        this.recordVisitor();
-    }
-
-    /**
-     * 初始化系統說明區塊的顯示狀態
-     */
-    initSystemIntroState() {
-        const isCollapsed = localStorage.getItem('systemIntroCollapsed') === 'true';
-        if (isCollapsed) {
-            hideSystemIntro();
-        } else {
-            showSystemIntro();
-        }
-    }
-
-    /**
-     * 記錄訪客並更新計數器
-     */
-    async recordVisitor() {
-        try {
-            // 記錄訪問到Google Sheets
-            if (this.isOnline && navigator.onLine) {
-                const visitorData = {
-                    timestamp: getTaiwanTime(),
-                    userAgent: navigator.userAgent.substring(0, 100), // 限制長度
-                    referrer: document.referrer || '直接訪問'
-                };
-                
-                // 使用 GET 方式避免 CORS 問題
-                const params = new URLSearchParams({
-                    action: 'recordVisitor',
-                    timestamp: visitorData.timestamp,
-                    userAgent: visitorData.userAgent.substring(0, 50), // 限制長度
-                    referrer: visitorData.referrer
-                });
-                
-                const response = await fetch(`${this.apiUrl}?${params.toString()}`, {
-                    method: 'GET',
-                    mode: 'cors'
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log('訪客記錄成功:', result);
-                    this.updateVisitorCount(result.totalVisitors);
-                } else {
-                    const errorText = await response.text();
-                    console.error('HTTP錯誤:', response.status, response.statusText);
-                    console.error('錯誤內容:', errorText);
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
-                }
-            } else {
-                // 離線模式：顯示預設計數
-                this.updateVisitorCount('離線');
-            }
-        } catch (error) {
-            console.error('訪客記錄失敗:', error);
-            // 顯示詳細錯誤資訊供調試
-            console.error('錯誤詳情:', error.message);
-            console.error('API URL:', this.apiUrl);
-            // 顯示錯誤狀態
-            this.updateVisitorCount('錯誤');
-        }
-    }
-    
-    /**
-     * 更新訪客計數顯示
-     */
-    updateVisitorCount(count) {
-        const counterElement = document.getElementById('visitor-count');
-        if (counterElement) {
-            counterElement.textContent = count;
-        }
+        // 預設顯示記錄分頁
+        this.showTab('record', document.querySelector('.nav-btn.active'));
     }
 
     /**
@@ -322,26 +243,10 @@ class TableTennisRecordSystem {
     togglePlayerFields(matchType) {
         const ourGroup = document.getElementById('our-player-2-group');
         const oppGroup = document.getElementById('opponent-player-2-group');
-        
-        // 更新標籤文字
-        const ourPlayerLabel = document.querySelector('label[for="our-player"]');
-        const ourGradeLabel = document.querySelector('label[for="our-player-grade"]');
-        const oppPlayerLabel = document.querySelector('label[for="opponent-player"]');
-        
         if (matchType === 'doubles') {
             if (ourGroup) ourGroup.style.display = 'block';
             if (oppGroup) oppGroup.style.display = 'block';
-            
-            // 雙打時加上A標籤
-            if (ourPlayerLabel) ourPlayerLabel.textContent = '百齡球員A：';
-            if (ourGradeLabel) ourGradeLabel.textContent = '百齡球員A-年級：';
-            if (oppPlayerLabel) oppPlayerLabel.textContent = '對手球員A：';
         } else {
-            // 單打時移除A標籤
-            if (ourPlayerLabel) ourPlayerLabel.textContent = '百齡球員：';
-            if (ourGradeLabel) ourGradeLabel.textContent = '百齡球員年級：';
-            if (oppPlayerLabel) oppPlayerLabel.textContent = '對手球員：';
-            
             if (ourGroup) {
                 ourGroup.style.display = 'none';
                 // 重置第二位球員的年級和球員選單
@@ -634,36 +539,11 @@ class TableTennisRecordSystem {
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
         if (button) button.classList.add('active');
         if (tabName === 'stats') {
-            if (this.dataLoading) {
-                this.showStatsLoadingMessage();
-            } else {
-                this.updateStats();
-                this.displayPlayerStats();
-            }
+            this.updateStats();
+            this.displayPlayerStats();
         } else if (tabName === 'history') {
             this.initializeFilters();
             this.displayHistory();
-        }
-    }
-
-    /**
-     * 顯示統計分析頁面的載入訊息
-     */
-    showStatsLoadingMessage() {
-        // 清空統計卡片顯示載入中
-        document.getElementById('total-matches').textContent = '載入中...';
-        document.getElementById('wins').textContent = '載入中...';
-        document.getElementById('win-rate').textContent = '載入中...';
-        
-        // 清空球員列表並顯示載入訊息
-        const playerList = document.getElementById('player-list');
-        if (playerList) {
-            playerList.innerHTML = `
-                <div style="text-align: center; padding: 20px; color: #666;">
-                    <div style="margin-bottom: 10px;">📊 資料載入中...</div>
-                    <div style="font-size: 0.9em;">請稍候，正在從雲端讀取比賽記錄</div>  
-                </div>
-            `;
         }
     }
 
@@ -871,39 +751,9 @@ class TableTennisRecordSystem {
             this.recomputePlayerStats();
             this.updateStats();
             this.displayPlayerStats();
-            // 只有在history tab是active時才更新顯示，避免干擾用戶的tab選擇
-            this.updateHistoryIfVisible();
-            // 資料載入完成
-            this.dataLoading = false;
-            // 如果目前在統計頁面，需要更新顯示
-            this.updateStatsIfVisible();
+            this.displayHistory();
         } catch (err) {
             console.error('取得遠端資料失敗', err);
-            // 即使載入失敗也要設定完成狀態
-            this.dataLoading = false;
-            // 如果目前在統計頁面，需要更新顯示（即使載入失敗也要顯示0）
-            this.updateStatsIfVisible();
-        }
-    }
-
-    /**
-     * 只有在history tab是active時才更新歷史記錄顯示
-     */
-    updateHistoryIfVisible() {
-        const historyTab = document.getElementById('history-tab');
-        if (historyTab && historyTab.classList.contains('active')) {
-            this.displayHistory();
-        }
-    }
-
-    /**
-     * 只有在stats tab是active時才更新統計顯示
-     */
-    updateStatsIfVisible() {
-        const statsTab = document.getElementById('stats-tab');
-        if (statsTab && statsTab.classList.contains('active')) {
-            this.updateStats();
-            this.displayPlayerStats();
         }
     }
 
@@ -1588,8 +1438,6 @@ function hideSystemIntro() {
     if (expandBtn) {
         expandBtn.style.display = 'inline-block';
     }
-    // 記住收合狀態
-    localStorage.setItem('systemIntroCollapsed', 'true');
 }
 
 // 顯示系統說明區塊
@@ -1602,23 +1450,15 @@ function showSystemIntro() {
     if (expandBtn) {
         expandBtn.style.display = 'none';
     }
-    // 記住展開狀態
-    localStorage.setItem('systemIntroCollapsed', 'false');
 }
 
 // 將 showTab 函式暴露給 HTML
 function showTab(tabName, button) {
     try {
         if (system && typeof system.showTab === 'function') {
-            // 只在記錄比賽頁面根據用戶設定顯示說明區塊，其他頁面隱藏
+            // 只在記錄比賽頁面顯示說明區塊，其他頁面隱藏
             if (tabName === 'record') {
-                // 根據localStorage設定來決定是否顯示
-                const isCollapsed = localStorage.getItem('systemIntroCollapsed') === 'true';
-                if (isCollapsed) {
-                    hideSystemIntro();
-                } else {
-                    showSystemIntro();
-                }
+                showSystemIntro();
             } else {
                 hideSystemIntro();
             }

@@ -24,7 +24,6 @@
         <div class="system-intro">
             <div class="intro-container">
                 <div class="intro-header">
-                    <h2>📊 智慧比賽記錄系統</h2>
                     <p class="intro-subtitle">為百齡桌球校隊量身打造的比賽管理工具</p>
                 </div>
                 
@@ -108,14 +107,13 @@
                     <label for="match-type">比賽類型：</label>
                     <select id="match-type" required>
                         <option value="">請選擇</option>
-                        <option value="team">團體賽</option>
                         <option value="singles">個人單打</option>
                         <option value="doubles">個人雙打</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label for="our-player-grade">我方球員年級：</label>
+                    <label for="our-player-grade">百齡球員年級：</label>
                     <select id="our-player-grade" required>
                         <option value="">請先選擇年級</option>
                         <option value="1">1年級</option>
@@ -128,14 +126,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="our-player">我方球員：</label>
+                    <label for="our-player">百齡球員：</label>
                     <select id="our-player" required disabled>
                         <option value="">請先選擇年級</option>
                     </select>
                     <input type="text" id="our-player-custom" placeholder="請輸入其他球員姓名" style="display:none; margin-top:10px;">
                     <!-- 第二位我方球員區塊：僅在雙打時顯示 -->
                     <div id="our-player-2-group" style="display:none; margin-top:10px;">
-                        <label for="our-player-2-grade">我方球員（二）年級：</label>
+                        <label for="our-player-2-grade">百齡球員B-年級：</label>
                         <select id="our-player-2-grade">
                             <option value="">請先選擇年級</option>
                             <option value="1">1年級</option>
@@ -146,7 +144,7 @@
                             <option value="6">6年級</option>
                         </select>
                         <div style="margin-top:10px;">
-                            <label for="our-player-2">我方球員（二）：</label>
+                            <label for="our-player-2">百齡球員B：</label>
                             <select id="our-player-2" disabled>
                                 <option value="">請先選擇年級</option>
                             </select>
@@ -160,7 +158,7 @@
                     <input type="text" id="opponent-player" placeholder="對手球員姓名" required>
                     <!-- 第二位對手球員區塊：僅在雙打時顯示 -->
                     <div id="opponent-player-2-group" style="display:none; margin-top:10px;">
-                        <label for="opponent-player-2">對手球員（二）：</label>
+                        <label for="opponent-player-2">對手球員B：</label>
                         <input type="text" id="opponent-player-2" placeholder="對手球員姓名">
                     </div>
                 </div>
@@ -264,7 +262,6 @@
                         <label for="filter-match-type">比賽類型：</label>
                         <select id="filter-match-type">
                             <option value="">全部類型</option>
-                            <option value="team">團體賽</option>
                             <option value="singles">個人單打</option>
                             <option value="doubles">個人雙打</option>
                         </select>
@@ -314,6 +311,13 @@
             </div>
         </div>
     </div>
+
+    <!-- 訪客計數器 -->
+    <footer class="visitor-counter">
+        <div class="counter-text">
+            訪客 #<span id="visitor-count">載入中...</span> 人次
+        </div>
+    </footer>
 
     <script src="script.js"></script>
 </body>
