@@ -653,6 +653,12 @@ class TableTennisRecordSystem {
         } else if (tabName === 'history') {
             this.initializeFilters();
             this.displayHistory();
+        } else if (tabName === 'analysis') {
+            if (this.dataLoading) {
+                this.showAnalysisLoadingMessage();
+            } else {
+                this.updateAdvancedAnalysis();
+            }
         }
     }
 
@@ -816,6 +822,8 @@ class TableTennisRecordSystem {
             this.updateStats();
             this.displayPlayerStats();
             this.displayHistory();
+            // 更新進階分析（如果該頁面是活躍的）
+            this.updateAnalysisIfVisible();
         } catch (err) {
             // API儲存失敗，但不影響後續操作
             console.error('API儲存失敗，但表單資料已保留:', err);
@@ -903,6 +911,8 @@ class TableTennisRecordSystem {
             this.displayPlayerStats();
             // 只有在history tab是active時才更新顯示，避免干擾用戶的tab選擇
             this.updateHistoryIfVisible();
+            // 更新進階分析（如果該頁面是活躍的）
+            this.updateAnalysisIfVisible();
             // 資料載入完成
             this.dataLoading = false;
             // 如果目前在統計頁面，需要更新顯示
@@ -934,6 +944,16 @@ class TableTennisRecordSystem {
         if (statsTab && statsTab.classList.contains('active')) {
             this.updateStats();
             this.displayPlayerStats();
+        }
+    }
+
+    /**
+     * 只有在analysis tab是active時才更新進階分析顯示
+     */
+    updateAnalysisIfVisible() {
+        const analysisTab = document.getElementById('analysis-tab');
+        if (analysisTab && analysisTab.classList.contains('active')) {
+            this.updateAdvancedAnalysis();
         }
     }
 
@@ -1605,6 +1625,730 @@ class TableTennisRecordSystem {
         }
         const group2 = document.getElementById('opponent-player-2-group');
         if (group2) group2.style.display = 'none';
+    }
+
+    /**
+     * 顯示進階分析載入訊息
+     */
+    showAnalysisLoadingMessage() {
+        const elements = ['top-opponent', 'toughest-opponent', 'easiest-opponent', 
+                         'recent-win-rate', 'best-streak', 'monthly-matches'];
+        
+        elements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = '載入中...';
+        });
+        
+        const tableElements = ['opponent-stats-table', 'monthly-trend-table', 'player-opponent-stats'];
+        tableElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.innerHTML = '<div class="loading-placeholder">📊 資料載入中...</div>';
+        });
+        
+        this.populateAnalysisPlayerSelect();
+        this.setupChartToggleButtons();
+    }
+
+    /**
+     * 更新進階分析資料
+     */
+    updateAdvancedAnalysis() {
+        this.updateOpponentAnalysis();
+        this.updateTrendAnalysis();
+        this.populateAnalysisPlayerSelect();
+        this.updatePlayerOpponentAnalysis();
+        this.setupChartToggleButtons();
+    }
+
+    /**
+     * 設置圖表切換按鈕
+     */
+    setupChartToggleButtons() {
+        // 趨勢圖表切換
+        const trendTableBtn = document.getElementById('trend-table-btn');
+        const trendChartBtn = document.getElementById('trend-chart-btn');
+        const trendTable = document.getElementById('monthly-trend-table');
+        const trendChart = document.getElementById('monthly-trend-chart');
+
+        if (trendTableBtn && trendChartBtn) {
+            trendTableBtn.onclick = () => {
+                trendTableBtn.classList.add('active');
+                trendChartBtn.classList.remove('active');
+                if (trendTable) trendTable.style.display = 'block';
+                if (trendChart) trendChart.style.display = 'none';
+            };
+
+            trendChartBtn.onclick = () => {
+                trendChartBtn.classList.add('active');
+                trendTableBtn.classList.remove('active');
+                if (trendTable) trendTable.style.display = 'none';
+                if (trendChart) {
+                    trendChart.style.display = 'block';
+                    this.renderTrendChart();
+                }
+            };
+        }
+
+        // 對手統計圖表切換
+        const opponentTableBtn = document.getElementById('opponent-table-btn');
+        const opponentChartBtn = document.getElementById('opponent-chart-btn');
+        const opponentTable = document.getElementById('opponent-stats-table');
+        const opponentChart = document.getElementById('opponent-stats-chart');
+
+        if (opponentTableBtn && opponentChartBtn) {
+            opponentTableBtn.onclick = () => {
+                opponentTableBtn.classList.add('active');
+                opponentChartBtn.classList.remove('active');
+                if (opponentTable) opponentTable.style.display = 'block';
+                if (opponentChart) opponentChart.style.display = 'none';
+            };
+
+            opponentChartBtn.onclick = () => {
+                opponentChartBtn.classList.add('active');
+                opponentTableBtn.classList.remove('active');
+                if (opponentTable) opponentTable.style.display = 'none';
+                if (opponentChart) {
+                    opponentChart.style.display = 'block';
+                    this.renderOpponentChart();
+                }
+            };
+        }
+    }
+
+    /**
+     * 更新對手分析
+     */
+    updateOpponentAnalysis() {
+        if (this.matches.length === 0) {
+            document.getElementById('top-opponent').textContent = '暫無資料';
+            document.getElementById('toughest-opponent').textContent = '暫無資料';
+            document.getElementById('easiest-opponent').textContent = '暫無資料';
+            document.getElementById('opponent-stats-table').innerHTML = '<div class="loading-placeholder">暫無比賽記錄</div>';
+            return;
+        }
+
+        // 計算對手統計
+        const opponentStats = {};
+        this.matches.forEach(match => {
+            const school = match.opponentSchool;
+            if (!opponentStats[school]) {
+                opponentStats[school] = { matches: 0, wins: 0, losses: 0 };
+            }
+            opponentStats[school].matches++;
+            if (match.result === 'win') {
+                opponentStats[school].wins++;
+            } else if (match.result === 'lose') {
+                opponentStats[school].losses++;
+            }
+        });
+
+        // 計算勝率
+        Object.keys(opponentStats).forEach(school => {
+            const stats = opponentStats[school];
+            stats.winRate = stats.matches > 0 ? (stats.wins / stats.matches * 100) : 0;
+        });
+
+        // 找出最常對戰、最難纏、最有把握的對手
+        const sortedByMatches = Object.entries(opponentStats)
+            .sort((a, b) => b[1].matches - a[1].matches);
+        const sortedByWinRate = Object.entries(opponentStats)
+            .filter(([, stats]) => stats.matches >= 2) // 至少2場比賽
+            .sort((a, b) => a[1].winRate - b[1].winRate);
+        const sortedByEasyRate = Object.entries(opponentStats)
+            .filter(([, stats]) => stats.matches >= 2)
+            .sort((a, b) => b[1].winRate - a[1].winRate);
+
+        // 更新統計卡片
+        document.getElementById('top-opponent').textContent = 
+            sortedByMatches.length > 0 ? `${sortedByMatches[0][0]} (${sortedByMatches[0][1].matches}場)` : '暫無資料';
+        
+        document.getElementById('toughest-opponent').textContent = 
+            sortedByWinRate.length > 0 ? `${sortedByWinRate[0][0]} (${sortedByWinRate[0][1].winRate.toFixed(1)}%)` : '暫無資料';
+        
+        document.getElementById('easiest-opponent').textContent = 
+            sortedByEasyRate.length > 0 ? `${sortedByEasyRate[0][0]} (${sortedByEasyRate[0][1].winRate.toFixed(1)}%)` : '暫無資料';
+
+        // 生成對手統計表格
+        this.generateOpponentStatsTable(opponentStats);
+    }
+
+    /**
+     * 生成對手統計表格
+     */
+    generateOpponentStatsTable(opponentStats) {
+        const sortedStats = Object.entries(opponentStats)
+            .sort((a, b) => b[1].matches - a[1].matches);
+
+        let tableHTML = `
+            <table class="analysis-table">
+                <thead>
+                    <tr>
+                        <th>對手學校</th>
+                        <th>總場數</th>
+                        <th>勝場</th>
+                        <th>負場</th>
+                        <th>勝率</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        sortedStats.forEach(([school, stats]) => {
+            const winRateClass = stats.winRate >= 70 ? 'win-rate-high' : 
+                                 stats.winRate >= 40 ? 'win-rate-medium' : 'win-rate-low';
+            
+            tableHTML += `
+                <tr>
+                    <td><strong>${school}</strong></td>
+                    <td>${stats.matches}</td>
+                    <td>${stats.wins}</td>
+                    <td>${stats.losses}</td>
+                    <td class="${winRateClass}">${stats.winRate.toFixed(1)}%</td>
+                </tr>
+            `;
+        });
+
+        tableHTML += '</tbody></table>';
+        document.getElementById('opponent-stats-table').innerHTML = tableHTML;
+    }
+
+    /**
+     * 更新趨勢分析
+     */
+    updateTrendAnalysis() {
+        if (this.matches.length === 0) {
+            document.getElementById('recent-win-rate').textContent = '0%';
+            document.getElementById('best-streak').textContent = '0';
+            document.getElementById('monthly-matches').textContent = '0';
+            document.getElementById('monthly-trend-table').innerHTML = '<div class="loading-placeholder">暫無比賽記錄</div>';
+            return;
+        }
+
+        // 計算近30天勝率
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const recentMatches = this.matches.filter(match => 
+            new Date(match.date) >= thirtyDaysAgo
+        );
+        
+        const recentWins = recentMatches.filter(match => match.result === 'win').length;
+        const recentWinRate = recentMatches.length > 0 ? 
+            (recentWins / recentMatches.length * 100).toFixed(1) : '0';
+        
+        document.getElementById('recent-win-rate').textContent = `${recentWinRate}%`;
+
+        // 計算最佳連勝
+        let bestStreak = 0;
+        let currentStreak = 0;
+        
+        const sortedMatches = [...this.matches].sort((a, b) => new Date(a.date) - new Date(b.date));
+        sortedMatches.forEach(match => {
+            if (match.result === 'win') {
+                currentStreak++;
+                bestStreak = Math.max(bestStreak, currentStreak);
+            } else {
+                currentStreak = 0;
+            }
+        });
+        
+        document.getElementById('best-streak').textContent = bestStreak;
+
+        // 計算本月比賽場數
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const monthlyMatches = this.matches.filter(match => {
+            const matchDate = new Date(match.date);
+            return matchDate.getMonth() === currentMonth && matchDate.getFullYear() === currentYear;
+        });
+        
+        document.getElementById('monthly-matches').textContent = monthlyMatches.length;
+
+        // 生成月度趨勢表格
+        this.generateMonthlyTrendTable();
+    }
+
+    /**
+     * 生成月度趨勢表格
+     */
+    generateMonthlyTrendTable() {
+        const monthlyStats = {};
+        
+        this.matches.forEach(match => {
+            const date = new Date(match.date);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (!monthlyStats[monthKey]) {
+                monthlyStats[monthKey] = { matches: 0, wins: 0, losses: 0 };
+            }
+            
+            monthlyStats[monthKey].matches++;
+            if (match.result === 'win') {
+                monthlyStats[monthKey].wins++;
+            } else if (match.result === 'lose') {
+                monthlyStats[monthKey].losses++;
+            }
+        });
+
+        // 計算勝率
+        Object.keys(monthlyStats).forEach(month => {
+            const stats = monthlyStats[month];
+            stats.winRate = stats.matches > 0 ? (stats.wins / stats.matches * 100) : 0;
+        });
+
+        // 按月份排序
+        const sortedMonths = Object.entries(monthlyStats)
+            .sort((a, b) => b[0].localeCompare(a[0]))
+            .slice(0, 6); // 顯示最近6個月
+
+        let tableHTML = `
+            <table class="analysis-table">
+                <thead>
+                    <tr>
+                        <th>月份</th>
+                        <th>比賽場數</th>
+                        <th>勝場</th>
+                        <th>勝率</th>
+                        <th>趨勢</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        sortedMonths.forEach(([month, stats], index) => {
+            const [year, monthNum] = month.split('-');
+            const monthName = `${year}年${monthNum}月`;
+            const winRateClass = stats.winRate >= 70 ? 'win-rate-high' : 
+                                 stats.winRate >= 40 ? 'win-rate-medium' : 'win-rate-low';
+            
+            // 計算趨勢
+            let trend = '➡️';
+            if (index < sortedMonths.length - 1) {
+                const prevWinRate = sortedMonths[index + 1][1].winRate;
+                if (stats.winRate > prevWinRate) {
+                    trend = '📈';
+                } else if (stats.winRate < prevWinRate) {
+                    trend = '📉';
+                }
+            }
+            
+            tableHTML += `
+                <tr>
+                    <td><strong>${monthName}</strong></td>
+                    <td>${stats.matches}</td>
+                    <td>${stats.wins}</td>
+                    <td class="${winRateClass}">${stats.winRate.toFixed(1)}%</td>
+                    <td>${trend}</td>
+                </tr>
+            `;
+        });
+
+        tableHTML += '</tbody></table>';
+        document.getElementById('monthly-trend-table').innerHTML = tableHTML;
+    }
+
+    /**
+     * 填充分析頁面的球員選擇下拉選單
+     */
+    populateAnalysisPlayerSelect() {
+        const select = document.getElementById('analysis-player-select');
+        if (!select) return;
+
+        select.innerHTML = '<option value="">請選擇球員</option>';
+        
+        const allPlayers = new Set();
+        this.matches.forEach(match => {
+            match.ourPlayers.forEach(player => allPlayers.add(player));
+        });
+
+        [...allPlayers].sort().forEach(player => {
+            const option = document.createElement('option');
+            option.value = player;
+            option.textContent = player;
+            select.appendChild(option);
+        });
+
+        // 添加選擇事件監聽器
+        select.removeEventListener('change', this.handlePlayerSelectChange); // 移除舊的監聽器
+        this.handlePlayerSelectChange = (e) => {
+            this.updatePlayerOpponentAnalysis(e.target.value);
+        };
+        select.addEventListener('change', this.handlePlayerSelectChange);
+    }
+
+    /**
+     * 更新球員對手分析
+     */
+    updatePlayerOpponentAnalysis(selectedPlayer = null) {
+        const container = document.getElementById('player-opponent-stats');
+        if (!container) return;
+
+        if (!selectedPlayer) {
+            container.innerHTML = '請先選擇球員查看詳細分析';
+            return;
+        }
+
+        // 篩選該球員的比賽記錄
+        const playerMatches = this.matches.filter(match => 
+            match.ourPlayers.includes(selectedPlayer)
+        );
+
+        if (playerMatches.length === 0) {
+            container.innerHTML = `<div class="loading-placeholder">球員 ${selectedPlayer} 暫無比賽記錄</div>`;
+            return;
+        }
+
+        // 計算該球員對各對手的統計
+        const opponentStats = {};
+        playerMatches.forEach(match => {
+            const school = match.opponentSchool;
+            if (!opponentStats[school]) {
+                opponentStats[school] = { matches: 0, wins: 0, losses: 0 };
+            }
+            opponentStats[school].matches++;
+            if (match.result === 'win') {
+                opponentStats[school].wins++;
+            } else if (match.result === 'lose') {
+                opponentStats[school].losses++;
+            }
+        });
+
+        // 計算勝率
+        Object.keys(opponentStats).forEach(school => {
+            const stats = opponentStats[school];
+            stats.winRate = stats.matches > 0 ? (stats.wins / stats.matches * 100) : 0;
+        });
+
+        // 生成球員對手統計
+        const sortedStats = Object.entries(opponentStats)
+            .sort((a, b) => b[1].matches - a[1].matches);
+
+        let html = `
+            <div style="margin-bottom: 1rem;">
+                <strong>球員：${selectedPlayer}</strong> | 
+                總比賽：${playerMatches.length}場 | 
+                勝場：${playerMatches.filter(m => m.result === 'win').length} | 
+                勝率：${((playerMatches.filter(m => m.result === 'win').length / playerMatches.length) * 100).toFixed(1)}%
+            </div>
+            <table class="analysis-table">
+                <thead>
+                    <tr>
+                        <th>對手學校</th>
+                        <th>對戰次數</th>
+                        <th>勝場</th>
+                        <th>勝率</th>
+                        <th>表現評價</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        sortedStats.forEach(([school, stats]) => {
+            const winRateClass = stats.winRate >= 70 ? 'win-rate-high' : 
+                                 stats.winRate >= 40 ? 'win-rate-medium' : 'win-rate-low';
+            
+            let performance = '普通';
+            if (stats.winRate >= 80) performance = '優秀';
+            else if (stats.winRate >= 60) performance = '良好';
+            else if (stats.winRate <= 30) performance = '需改進';
+
+            html += `
+                <tr>
+                    <td><strong>${school}</strong></td>
+                    <td>${stats.matches}</td>
+                    <td>${stats.wins}</td>
+                    <td class="${winRateClass}">${stats.winRate.toFixed(1)}%</td>
+                    <td>${performance}</td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    /**
+     * 渲染月度趨勢圖表
+     */
+    renderTrendChart() {
+        const chartContainer = document.getElementById('monthly-trend-chart');
+        if (!chartContainer || !window.echarts) return;
+
+        // 計算月度統計
+        const monthlyStats = {};
+        this.matches.forEach(match => {
+            const date = new Date(match.date);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (!monthlyStats[monthKey]) {
+                monthlyStats[monthKey] = { matches: 0, wins: 0 };
+            }
+            
+            monthlyStats[monthKey].matches++;
+            if (match.result === 'win') {
+                monthlyStats[monthKey].wins++;
+            }
+        });
+
+        // 計算勝率並排序
+        const sortedMonths = Object.entries(monthlyStats)
+            .map(([month, stats]) => ({
+                month,
+                winRate: stats.matches > 0 ? (stats.wins / stats.matches * 100) : 0,
+                matches: stats.matches,
+                wins: stats.wins
+            }))
+            .sort((a, b) => a.month.localeCompare(b.month))
+            .slice(-6); // 最近6個月
+
+        if (sortedMonths.length === 0) {
+            chartContainer.innerHTML = '<div class="loading-placeholder">暫無資料可繪製圖表</div>';
+            return;
+        }
+
+        // 準備圖表數據
+        const months = sortedMonths.map(item => {
+            const [year, month] = item.month.split('-');
+            return `${year}年${month}月`;
+        });
+        const winRates = sortedMonths.map(item => item.winRate);
+        const matchCounts = sortedMonths.map(item => item.matches);
+
+        // 創建或獲取圖表實例
+        let chart = echarts.getInstanceByDom(chartContainer);
+        if (!chart) {
+            chart = echarts.init(chartContainer);
+        }
+
+        // 配置圖表選項
+        const option = {
+            title: {
+                text: '月度勝率趨勢',
+                left: 'center',
+                textStyle: {
+                    fontSize: 16,
+                    color: '#667eea'
+                }
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: function(params) {
+                    const dataIndex = params[0].dataIndex;
+                    const monthData = sortedMonths[dataIndex];
+                    return `${params[0].axisValue}<br/>
+                            勝率: ${monthData.winRate.toFixed(1)}%<br/>
+                            總場數: ${monthData.matches}場<br/>
+                            勝場: ${monthData.wins}場`;
+                }
+            },
+            legend: {
+                data: ['勝率', '比賽場數'],
+                top: 30
+            },
+            xAxis: {
+                type: 'category',
+                data: months,
+                axisLabel: {
+                    rotate: 45,
+                    fontSize: 10
+                }
+            },
+            yAxis: [
+                {
+                    type: 'value',
+                    name: '勝率 (%)',
+                    min: 0,
+                    max: 100,
+                    axisLabel: {
+                        formatter: '{value}%'
+                    }
+                },
+                {
+                    type: 'value',
+                    name: '場數',
+                    axisLabel: {
+                        formatter: '{value}場'
+                    }
+                }
+            ],
+            series: [
+                {
+                    name: '勝率',
+                    type: 'line',
+                    data: winRates,
+                    smooth: true,
+                    lineStyle: {
+                        color: '#667eea',
+                        width: 3
+                    },
+                    itemStyle: {
+                        color: '#667eea'
+                    },
+                    areaStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [
+                                { offset: 0, color: 'rgba(102, 126, 234, 0.3)' },
+                                { offset: 1, color: 'rgba(102, 126, 234, 0.1)' }
+                            ]
+                        }
+                    }
+                },
+                {
+                    name: '比賽場數',
+                    type: 'bar',
+                    yAxisIndex: 1,
+                    data: matchCounts,
+                    itemStyle: {
+                        color: '#764ba2',
+                        opacity: 0.7
+                    }
+                }
+            ]
+        };
+
+        chart.setOption(option);
+
+        // 響應式處理
+        window.addEventListener('resize', () => {
+            chart.resize();
+        });
+    }
+
+    /**
+     * 渲染對手統計圖表
+     */
+    renderOpponentChart() {
+        const chartContainer = document.getElementById('opponent-stats-chart');
+        if (!chartContainer || !window.echarts) return;
+
+        // 計算對手統計
+        const opponentStats = {};
+        this.matches.forEach(match => {
+            const school = match.opponentSchool;
+            if (!opponentStats[school]) {
+                opponentStats[school] = { matches: 0, wins: 0 };
+            }
+            opponentStats[school].matches++;
+            if (match.result === 'win') {
+                opponentStats[school].wins++;
+            }
+        });
+
+        // 準備圖表數據
+        const sortedStats = Object.entries(opponentStats)
+            .map(([school, stats]) => ({
+                school,
+                winRate: stats.matches > 0 ? (stats.wins / stats.matches * 100) : 0,
+                matches: stats.matches,
+                wins: stats.wins
+            }))
+            .sort((a, b) => b.matches - a.matches)
+            .slice(0, 8); // 顯示前8個對手
+
+        if (sortedStats.length === 0) {
+            chartContainer.innerHTML = '<div class="loading-placeholder">暫無資料可繪製圖表</div>';
+            return;
+        }
+
+        // 創建或獲取圖表實例
+        let chart = echarts.getInstanceByDom(chartContainer);
+        if (!chart) {
+            chart = echarts.init(chartContainer);
+        }
+
+        // 配置圖表選項
+        const option = {
+            title: {
+                text: '對手學校勝率分析',
+                left: 'center',
+                textStyle: {
+                    fontSize: 16,
+                    color: '#667eea'
+                }
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: function(params) {
+                    const dataIndex = params[0].dataIndex;
+                    const schoolData = sortedStats[dataIndex];
+                    return `${schoolData.school}<br/>
+                            勝率: ${schoolData.winRate.toFixed(1)}%<br/>
+                            總場數: ${schoolData.matches}場<br/>
+                            勝場: ${schoolData.wins}場`;
+                }
+            },
+            legend: {
+                data: ['勝率', '比賽場數'],
+                top: 30
+            },
+            xAxis: {
+                type: 'category',
+                data: sortedStats.map(item => item.school),
+                axisLabel: {
+                    rotate: 45,
+                    fontSize: 10
+                }
+            },
+            yAxis: [
+                {
+                    type: 'value',
+                    name: '勝率 (%)',
+                    min: 0,
+                    max: 100,
+                    axisLabel: {
+                        formatter: '{value}%'
+                    }
+                },
+                {
+                    type: 'value',
+                    name: '場數',
+                    axisLabel: {
+                        formatter: '{value}場'
+                    }
+                }
+            ],
+            series: [
+                {
+                    name: '勝率',
+                    type: 'line',
+                    data: sortedStats.map(item => item.winRate),
+                    smooth: true,
+                    lineStyle: {
+                        color: '#667eea',
+                        width: 3
+                    },
+                    itemStyle: {
+                        color: '#667eea'
+                    },
+                    symbolSize: 8
+                },
+                {
+                    name: '比賽場數',
+                    type: 'bar',
+                    yAxisIndex: 1,
+                    data: sortedStats.map(item => item.matches),
+                    itemStyle: {
+                        color: function(params) {
+                            // 根據勝率設置顏色
+                            const winRate = sortedStats[params.dataIndex].winRate;
+                            if (winRate >= 70) return '#28a745';
+                            if (winRate >= 40) return '#ffc107';
+                            return '#dc3545';
+                        },
+                        opacity: 0.8
+                    }
+                }
+            ]
+        };
+
+        chart.setOption(option);
+
+        // 響應式處理
+        window.addEventListener('resize', () => {
+            chart.resize();
+        });
     }
 }
 

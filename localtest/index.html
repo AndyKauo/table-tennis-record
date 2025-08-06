@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- v9.3.1版本：修復tab切換群，優化用戶體驗 -->
-    <title>🏓 百齡國小桌球校隊比賽記錄系統 v9.3.1</title>
+    <!-- v9.4.0版本：新增進階分析功能，包含對手分析、趨勢圖表、視覺化報表 -->
+    <title>🏓 百齡國小桌球校隊比賽記錄系統 v9.4.0</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <!-- v9.3.1版本頁面標題 -->
-            <h1>🏓 百齡國小桌球校隊比賽記錄系統 v9.3.1</h1>
+            <!-- v9.4.0版本頁面標題 -->
+            <h1>🏓 百齡國小桌球校隊比賽記錄系統 v9.4.0</h1>
             <nav>
                 <!-- 傳入 this 讓 js 可以切換 active 樣式 -->
                 <button class="nav-btn active" onclick="showTab('record', this)">記錄比賽</button>
                 <button class="nav-btn" onclick="showTab('stats', this)">統計分析</button>
+                <button class="nav-btn" onclick="showTab('analysis', this)">進階分析</button>
                 <button class="nav-btn" onclick="showTab('history', this)">歷史記錄</button>
             </nav>
         </header>
@@ -318,6 +319,85 @@
                 <div id="history-list"></div>
             </div>
         </div>
+
+        <!-- 進階分析頁面 -->
+        <div id="analysis-tab" class="tab-content">
+            <h2>📊 進階分析報表</h2>
+            
+            <!-- 對手分析區塊 -->
+            <div class="analysis-section">
+                <h3>🎯 對手學校分析</h3>
+                <div class="opponent-analysis">
+                    <div class="opponent-stats-grid">
+                        <div class="opponent-stat-card">
+                            <h4>最常對戰學校</h4>
+                            <div class="stat-value" id="top-opponent">載入中...</div>
+                        </div>
+                        <div class="opponent-stat-card">
+                            <h4>最難纏對手</h4>
+                            <div class="stat-value" id="toughest-opponent">載入中...</div>
+                        </div>
+                        <div class="opponent-stat-card">
+                            <h4>最有把握對手</h4>
+                            <div class="stat-value" id="easiest-opponent">載入中...</div>
+                        </div>
+                    </div>
+                    <div class="opponent-table-container">
+                        <h4>對手學校勝率統計</h4>
+                        <div class="chart-toggle-buttons">
+                            <button id="opponent-table-btn" class="chart-toggle-btn active">表格模式</button>
+                            <button id="opponent-chart-btn" class="chart-toggle-btn">圖表模式</button>
+                        </div>
+                        <div id="opponent-stats-table">載入中...</div>
+                        <div id="opponent-stats-chart" style="display:none; height:400px; margin-top:1rem;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 球員對手分析區塊 -->
+            <div class="analysis-section">
+                <h3>👤 球員對手分析</h3>
+                <div class="player-opponent-analysis">
+                    <div class="player-select-group">
+                        <label for="analysis-player-select">選擇球員：</label>
+                        <select id="analysis-player-select">
+                            <option value="">請選擇球員</option>
+                        </select>
+                    </div>
+                    <div id="player-opponent-stats">請先選擇球員查看詳細分析</div>
+                </div>
+            </div>
+
+            <!-- 趨勢分析區塊 -->
+            <div class="analysis-section">
+                <h3>📈 表現趨勢分析</h3>
+                <div class="trend-analysis">
+                    <div class="trend-stats-grid">
+                        <div class="trend-stat-card">
+                            <h4>近30天勝率</h4>
+                            <div class="stat-value" id="recent-win-rate">載入中...</div>
+                        </div>
+                        <div class="trend-stat-card">
+                            <h4>最佳連勝</h4>
+                            <div class="stat-value" id="best-streak">載入中...</div>
+                        </div>
+                        <div class="trend-stat-card">
+                            <h4>本月比賽場數</h4>
+                            <div class="stat-value" id="monthly-matches">載入中...</div>
+                        </div>
+                    </div>
+                    <div class="monthly-trend-container">
+                        <h4>月度勝率趨勢</h4>
+                        <div class="chart-toggle-buttons">
+                            <button id="trend-table-btn" class="chart-toggle-btn active">表格模式</button>
+                            <button id="trend-chart-btn" class="chart-toggle-btn">圖表模式</button>
+                        </div>
+                        <div id="monthly-trend-table">載入中...</div>
+                        <div id="monthly-trend-chart" style="display:none; height:300px; margin-top:1rem;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- 訪客計數器 -->
@@ -327,6 +407,8 @@
         </div>
     </footer>
 
+    <!-- ECharts 圖表庫 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
