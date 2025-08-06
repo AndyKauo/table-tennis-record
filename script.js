@@ -1622,12 +1622,19 @@ function hideSystemIntro() {
     localStorage.setItem('systemIntroCollapsed', 'true');
 }
 
-// 顯示系統說明區塊
+// 顯示系統說明區塊 - 🎨 優化過渡動畫
 function showSystemIntro() {
     const introSection = document.querySelector('.system-intro');
     const expandBtn = document.querySelector('.expand-intro-btn');
     if (introSection) {
         introSection.style.display = 'block';
+        // 🔧 確保重置所有樣式狀態
+        introSection.classList.remove('hiding');
+        introSection.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        setTimeout(() => {
+            introSection.style.opacity = '1';
+            introSection.style.transform = 'translateY(0)';
+        }, 10);
     }
     if (expandBtn) {
         expandBtn.style.display = 'none';
@@ -1689,13 +1696,32 @@ document.addEventListener('DOMContentLoaded', function() {
     initFilterPanelState();
 });
 
+// 🛠️ 新增：臨時隱藏系統說明（不影響用戶設定）
+function temporaryHideSystemIntro() {
+    const introSection = document.querySelector('.system-intro');
+    const expandBtn = document.querySelector('.expand-intro-btn');
+    
+    if (introSection) {
+        // 🎨 使用CSS過渡動畫但不加入永久class
+        introSection.style.opacity = '0';
+        introSection.style.transform = 'translateY(-10px)';
+        introSection.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        setTimeout(() => {
+            introSection.style.display = 'none';
+        }, 400);
+    }
+    if (expandBtn) {
+        expandBtn.style.display = 'none';
+    }
+}
+
 // 將 showTab 函式暴露給 HTML
 function showTab(tabName, button) {
     try {
         if (system && typeof system.showTab === 'function') {
-            // 只在記錄比賽頁面根據用戶設定顯示說明區塊，其他頁面隱藏
+            // 🎯 修復：只在記錄比賽頁面根據用戶設定顯示說明區塊
             if (tabName === 'record') {
-                // 根據localStorage設定來決定是否顯示
+                // 根據localStorage設定來決定是否顯示（保持用戶操作狀態）
                 const isCollapsed = localStorage.getItem('systemIntroCollapsed') === 'true';
                 if (isCollapsed) {
                     hideSystemIntro();
@@ -1703,7 +1729,18 @@ function showTab(tabName, button) {
                     showSystemIntro();
                 }
             } else {
-                hideSystemIntro();
+                // 🔧 其他頁面：臨時隱藏，不更改localStorage狀態
+                temporaryHideSystemIntro();
+            }
+            
+            // ✨ 加入過渡動畫
+            const activeTab = document.getElementById(`${tabName}-tab`);
+            if (activeTab) {
+                activeTab.style.transition = 'opacity 0.3s ease';
+                activeTab.style.opacity = '0';
+                setTimeout(() => {
+                    activeTab.style.opacity = '1';
+                }, 100);
             }
             
             system.showTab(tabName, button);

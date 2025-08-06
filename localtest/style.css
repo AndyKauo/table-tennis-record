@@ -59,14 +59,19 @@ nav {
     font-weight: bold;
 }
 
-/* Tab Content */
+/* Tab Content - 🎨 優化過渡動畫 */
 .tab-content {
     display: none;
     padding: 2rem;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(10px);
 }
 
 .tab-content.active {
     display: block;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .tab-content h2 {
@@ -534,10 +539,18 @@ nav {
     }
 }
 
-/* 系統說明區塊樣式 */
+/* 系統說明區塊樣式 - 🎨 加入過渡動畫 */
 .system-intro {
     background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
     border-bottom: 2px solid #e1e8ed;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.system-intro.hiding {
+    opacity: 0;
+    transform: translateY(-10px);
 }
 
 .intro-container {
