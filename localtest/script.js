@@ -1234,7 +1234,7 @@ class TableTennisRecordSystem {
             const div = document.createElement('div');
             div.className = 'player-item';
             div.innerHTML = `
-                <div class="player-name">${p.name}</div>
+                <div class="player-name clickable-player" onclick="viewPlayerHistory('${p.name}')">${p.name}</div>
                 <div class="player-record">總場次: ${p.matches} | 勝: ${p.wins} | 負: ${p.losses} | 勝率: ${rate}%</div>
             `;
             list.appendChild(div);
@@ -1715,6 +1715,67 @@ function temporaryHideSystemIntro() {
     }
 }
 
+// 🆕 球員歷史記錄查看功能 - 全域函數
+window.viewPlayerHistory = function viewPlayerHistory(playerName) {
+    try {
+        console.log(`Viewing history for player: ${playerName}`);
+        
+        // 標記這是從球員點擊進入的歷史記錄頁面
+        window.fromPlayerHistoryClick = true;
+        
+        // 切換到歷史記錄頁面
+        const historyButton = document.querySelector('[onclick*="history"]');
+        if (historyButton) {
+            showTab('history', historyButton);
+        }
+        
+        // 設定篩選條件：只選擇該球員，其他條件清空
+        setTimeout(() => {
+            // 清除所有篩選條件
+            const filterPlayer = document.getElementById('filter-player');
+            const filterMatchType = document.getElementById('filter-match-type');
+            const filterResult = document.getElementById('filter-result');
+            const filterOpponent = document.getElementById('filter-opponent');
+            const filterDateStart = document.getElementById('filter-date-start');
+            const filterDateEnd = document.getElementById('filter-date-end');
+            
+            // 設定球員篩選
+            if (filterPlayer) {
+                filterPlayer.value = playerName;
+            }
+            
+            // 清空其他篩選條件
+            if (filterMatchType) filterMatchType.value = '';
+            if (filterResult) filterResult.value = '';
+            if (filterOpponent) filterOpponent.value = '';
+            if (filterDateStart) filterDateStart.value = '';
+            if (filterDateEnd) filterDateEnd.value = '';
+            
+            // 執行篩選
+            if (typeof applyFilters === 'function') {
+                applyFilters();
+            } else if (system && typeof system.applyFilters === 'function') {
+                system.applyFilters();
+            }
+            
+            // 展開篩選面板讓用戶看到已選擇的條件
+            const filterContent = document.getElementById('filter-content');
+            const filterToggleIcon = document.getElementById('filter-toggle-icon');
+            if (filterContent && filterContent.style.display === 'none') {
+                filterContent.style.display = 'block';
+                if (filterToggleIcon) {
+                    filterToggleIcon.textContent = '▼';
+                }
+                localStorage.setItem('filterPanelCollapsed', 'false');
+            }
+            
+        }, 100); // 延遲確保頁面切換完成
+        
+    } catch (error) {
+        console.error('切換到球員歷史記錄失敗:', error);
+    }
+}
+
 // 將 showTab 函式暴露給 HTML
 function showTab(tabName, button) {
     try {
@@ -1728,6 +1789,21 @@ function showTab(tabName, button) {
                 } else {
                     showSystemIntro();
                 }
+            } else if (tabName === 'history') {
+                // 🔧 歷史記錄頁面：隱藏系統說明，並重置篩選條件（如果不是從球員點擊進入）
+                temporaryHideSystemIntro();
+                
+                // 檢查是否是直接切換到歷史記錄頁面（不是通過 viewPlayerHistory 函數）
+                setTimeout(() => {
+                    // 如果沒有來自 viewPlayerHistory 的標記，則清除篩選條件
+                    if (!window.fromPlayerHistoryClick) {
+                        if (system && typeof system.clearFilters === 'function') {
+                            system.clearFilters();
+                        }
+                    }
+                    // 清除標記（下次進入時重新判斷）
+                    window.fromPlayerHistoryClick = false;
+                }, 50);
             } else {
                 // 🔧 其他頁面：臨時隱藏，不更改localStorage狀態
                 temporaryHideSystemIntro();

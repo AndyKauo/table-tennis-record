@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- v9.2版本：新增系統說明、台灣時間的桌球校隊比賽記錄系統 -->
+    <title>🏓 百齡國小桌球校隊比賽記錄系統 v9.2</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <!-- v9.2版本頁面標題 -->
+            <h1>🏓 百齡國小桌球校隊比賽記錄系統 v9.2</h1>
+            <nav>
+                <!-- 傳入 this 讓 js 可以切換 active 樣式 -->
+                <button class="nav-btn active" onclick="showTab('record', this)">記錄比賽</button>
+                <button class="nav-btn" onclick="showTab('stats', this)">統計分析</button>
+                <button class="nav-btn" onclick="showTab('history', this)">歷史記錄</button>
+            </nav>
+        </header>
+
+        <!-- 系統說明區塊 -->
+        <div class="system-intro">
+            <div class="intro-container">
+                <div class="intro-header">
+                    <p class="intro-subtitle">為百齡桌球校隊量身打造的比賽管理工具</p>
+                </div>
+                
+                <div class="intro-content">
+                    <div class="problem-solution">
+                        <div class="problem">
+                            <div class="icon">❓</div>
+                            <h3>遇到的問題</h3>
+                            <p>明天要比賽了，對手好像以前有打過，但又不太確定...</p>
+                            <ul>
+                                <li>同年級出去比賽，常常會遇到以前打過的選手</li>
+                                <li>忘記對手的打法特點和實力</li>
+                                <li>不知道自己球員的表現趨勢</li>
+                                <li>無法累積比賽經驗做戰術參考</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="solution">
+                            <div class="icon">💡</div>
+                            <h3>系統能幫你做什麼</h3>
+                            <p>系統化記錄每場比賽，累積寶貴的對戰資料</p>
+                            <ul>
+                                <li>記錄比分、對手學校、球員表現</li>
+                                <li>分析個人勝率和成長軌跡</li>
+                                <li>建立對手資料庫，戰術筆記備忘</li>
+                                <li>支援離線使用，隨時隨地記錄</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="how-to-use">
+                        <h3>📝 如何使用</h3>
+                        <div class="steps">
+                            <div class="step">
+                                <span class="step-number">1</span>
+                                <p><strong>記錄比賽</strong> - 輸入對手、球員、比分等資訊</p>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2</span>
+                                <p><strong>查看統計</strong> - 分析球員表現和勝率趨勢</p>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">3</span>
+                                <p><strong>歷史查詢</strong> - 回顧過往比賽，制定戰術</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="intro-footer">
+                    <button class="cta-button" onclick="hideSystemIntro()">
+                        📝 開始記錄 (收合說明)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 記錄比賽頁面 -->
+        <div id="record-tab" class="tab-content active">
+            <div class="record-header">
+                <h2>新增比賽記錄</h2>
+                <button class="expand-intro-btn" onclick="showSystemIntro()" style="display:none;">
+                    ❓ 系統說明
+                </button>
+            </div>
+            
+            <form id="match-form">
+                <div class="form-group">
+                    <label for="match-date">比賽日期：</label>
+                    <input type="date" id="match-date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="opponent">對手學校：</label>
+                    <!-- 對手學校輸入改用 datalist，從歷史學校列表中選擇 -->
+                    <input type="text" id="opponent" list="opponent-list" placeholder="請輸入對手學校名稱" required>
+                    <datalist id="opponent-list"></datalist>
+                </div>
+
+                <div class="form-group">
+                    <label for="match-type">比賽類型：</label>
+                    <select id="match-type" required>
+                        <option value="">請選擇</option>
+                        <option value="singles">個人單打</option>
+                        <option value="doubles">個人雙打</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="our-player-grade">百齡球員年級：</label>
+                    <select id="our-player-grade" required>
+                        <option value="">請先選擇年級</option>
+                        <option value="1">1年級</option>
+                        <option value="2">2年級</option>
+                        <option value="3">3年級</option>
+                        <option value="4">4年級</option>
+                        <option value="5">5年級</option>
+                        <option value="6">6年級</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="our-player">百齡球員：</label>
+                    <select id="our-player" required disabled>
+                        <option value="">請先選擇年級</option>
+                    </select>
+                    <input type="text" id="our-player-custom" placeholder="請輸入其他球員姓名" style="display:none; margin-top:10px;">
+                    <!-- 第二位我方球員區塊：僅在雙打時顯示 -->
+                    <div id="our-player-2-group" style="display:none; margin-top:10px;">
+                        <label for="our-player-2-grade">百齡球員B-年級：</label>
+                        <select id="our-player-2-grade">
+                            <option value="">請先選擇年級</option>
+                            <option value="1">1年級</option>
+                            <option value="2">2年級</option>
+                            <option value="3">3年級</option>
+                            <option value="4">4年級</option>
+                            <option value="5">5年級</option>
+                            <option value="6">6年級</option>
+                        </select>
+                        <div style="margin-top:10px;">
+                            <label for="our-player-2">百齡球員B：</label>
+                            <select id="our-player-2" disabled>
+                                <option value="">請先選擇年級</option>
+                            </select>
+                            <input type="text" id="our-player-2-custom" placeholder="請輸入其他球員姓名" style="display:none; margin-top:10px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="opponent-player">對手球員：</label>
+                    <input type="text" id="opponent-player" placeholder="對手球員姓名" required>
+                    <!-- 第二位對手球員區塊：僅在雙打時顯示 -->
+                    <div id="opponent-player-2-group" style="display:none; margin-top:10px;">
+                        <label for="opponent-player-2">對手球員B：</label>
+                        <input type="text" id="opponent-player-2" placeholder="對手球員姓名">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>比分記錄：</label>
+                    <div class="score-input">
+                        <div class="set-scores">
+                            <div class="set">
+                                <label>第1局：</label>
+                                <input type="number" class="our-score" placeholder="我方" min="0" max="21">
+                                <span>:</span>
+                                <input type="number" class="opp-score" placeholder="對手" min="0" max="21">
+                            </div>
+                            <div class="set">
+                                <label>第2局：</label>
+                                <input type="number" class="our-score" placeholder="我方" min="0" max="21">
+                                <span>:</span>
+                                <input type="number" class="opp-score" placeholder="對手" min="0" max="21">
+                            </div>
+                            <div class="set">
+                                <label>第3局：</label>
+                                <input type="number" class="our-score" placeholder="我方" min="0" max="21">
+                                <span>:</span>
+                                <input type="number" class="opp-score" placeholder="對手" min="0" max="21">
+                            </div>
+                            <div class="set">
+                                <label>第4局：</label>
+                                <input type="number" class="our-score" placeholder="我方" min="0" max="21">
+                                <span>:</span>
+                                <input type="number" class="opp-score" placeholder="對手" min="0" max="21">
+                            </div>
+                            <div class="set">
+                                <label>第5局：</label>
+                                <input type="number" class="our-score" placeholder="我方" min="0" max="21">
+                                <span>:</span>
+                                <input type="number" class="opp-score" placeholder="對手" min="0" max="21">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="result">比賽結果：<small class="auto-hint">輸入比分後自動判斷</small></label>
+                    <select id="result" required>
+                        <option value="">輸入比分後自動判斷</option>
+                        <option value="win">勝</option>
+                        <option value="lose">負</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">備註：</label>
+                    <textarea id="notes" placeholder="戰術筆記、對手特點等..."></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">儲存記錄</button>
+            </form>
+        </div>
+
+        <!-- 統計分析頁面 -->
+        <div id="stats-tab" class="tab-content">
+            <h2>球員統計分析</h2>
+            
+            <div class="stats-summary">
+                <div class="stat-card">
+                    <h3>總比賽場數</h3>
+                    <div class="stat-number" id="total-matches">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>勝場</h3>
+                    <div class="stat-number" id="wins">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>勝率</h3>
+                    <div class="stat-number" id="win-rate">0%</div>
+                </div>
+            </div>
+
+            <div class="player-stats">
+                <h3>球員個人表現</h3>
+                <div id="player-list"></div>
+            </div>
+        </div>
+
+        <!-- 歷史記錄頁面 -->
+        <div id="history-tab" class="tab-content">
+            <h2>比賽歷史記錄</h2>
+            
+            <!-- 篩選控制區域 -->
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h3>🔍 篩選條件</h3>
+                    <button type="button" class="filter-toggle-btn" onclick="toggleFilterPanel()">
+                        <span id="filter-toggle-icon">▼</span>
+                    </button>
+                </div>
+                <div class="filter-content" id="filter-content">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="filter-player">篩選球員：</label>
+                        <select id="filter-player">
+                            <option value="">全部球員</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filter-match-type">比賽類型：</label>
+                        <select id="filter-match-type">
+                            <option value="">全部類型</option>
+                            <option value="singles">個人單打</option>
+                            <option value="doubles">個人雙打</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filter-result">比賽結果：</label>
+                        <select id="filter-result">
+                            <option value="">全部結果</option>
+                            <option value="win">勝</option>
+                            <option value="lose">負</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="filter-opponent">對手學校：</label>
+                        <select id="filter-opponent">
+                            <option value="">全部學校</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filter-date-start">開始日期：</label>
+                        <input type="date" id="filter-date-start">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filter-date-end">結束日期：</label>
+                        <input type="date" id="filter-date-end">
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="button" class="filter-btn apply-btn" onclick="applyFilters()">套用篩選</button>
+                    <button type="button" class="filter-btn clear-btn" onclick="clearFilters()">清除篩選</button>
+                </div>
+                </div>
+            </div>
+            
+            <!-- 比賽記錄顯示區域 -->
+            <div class="match-history">
+                <div class="results-summary">
+                    <span id="results-count">顯示全部記錄</span>
+                </div>
+                <div id="history-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 訪客計數器 -->
+    <footer class="visitor-counter">
+        <div class="counter-text">
+            訪客 #<span id="visitor-count">載入中...</span> 人次
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

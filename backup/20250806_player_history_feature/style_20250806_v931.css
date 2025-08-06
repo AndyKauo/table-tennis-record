@@ -218,50 +218,6 @@ nav {
     margin-bottom: 0.5rem;
 }
 
-/* 可點擊球員名稱樣式 */
-.clickable-player {
-    cursor: pointer;
-    transition: all 0.3s ease;
-    padding: 8px 12px;
-    border-radius: 6px;
-    display: inline-block;
-    position: relative;
-}
-
-.clickable-player:hover {
-    background-color: #667eea;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.clickable-player:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.4);
-}
-
-.clickable-player::after {
-    content: "👆 點擊查看歷史";
-    position: absolute;
-    bottom: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    z-index: 1000;
-}
-
-.clickable-player:hover::after {
-    opacity: 1;
-}
-
 .player-record {
     color: #666;
 }
